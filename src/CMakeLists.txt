@@ -21,5 +21,5 @@ add_library(common STATIC log.c util.c message.c message_queue.c peer.c)
 
 add_executable(server server.c server_main.c)
 add_executable(client client.c client_main.c)
-target_link_libraries(server Threads::Threads common)
-target_link_libraries(client Threads::Threads common)
+target_link_libraries(server avro Threads::Threads common )
+target_link_libraries(client avro Threads::Threads common )
