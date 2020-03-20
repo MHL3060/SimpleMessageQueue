@@ -24,6 +24,7 @@
 #include "message_queue.h"
 #include "peer.h"
 #include "util.h"
+#include "client.h"
 
 peer_t server;
 pthread_t message_producer;
@@ -196,7 +197,7 @@ void init_heart_beat(char *client_name) {
     peer_enqueue_heart_beat(&server, client_name, true, 3000);
 }
 
-int init_client(char *client_name) {
+int client_init(char *client_name) {
 
     if (setup_signals() != 0)
         exit(EXIT_FAILURE);
@@ -267,13 +268,4 @@ int init_client(char *client_name) {
 
         log_debug("And we are still waiting for server or stdin activity. You can type something to send:\n");
     }
-}
-
-int main(int argc, char **argv) {
-    init_log(LOG_DEBUG, "client");
-
-    char client_name[256];
-    get_client_name(argc, argv, client_name);
-    init_client(client_name);
-    return 0;
 }

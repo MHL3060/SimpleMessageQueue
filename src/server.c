@@ -48,7 +48,7 @@ void handle_signal_action(int sig_number) {
 void send_heart_beat_messages() {
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
-       peer_enqueue_heart_beat(&connection_list[i], "server", false, 1000);
+       peer_enqueue_heart_beat(&connection_list[i], SERVER_NAME, false, 1000);
     }
 
 }
@@ -311,11 +311,4 @@ int server_init(int *returnCode) {
     }
 
     return 0;
-}
-
-int main() {
-    init_log(LOG_DEBUG, "server");
-    int returnCode;
-
-    return server_init(&returnCode);
 }
