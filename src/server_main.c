@@ -3,10 +3,16 @@
 //
 #include "log.h"
 #include "server.h"
+#include "message.h"
 
 int main() {
     init_log(LOG_DEBUG, "server");
     int returnCode;
+    if (validateSchema() != 0) {
+        log_error("validation error");
+        return -1;
+    } else {
+        return server_init(&returnCode);
+    }
 
-    return server_init(&returnCode);
 }

@@ -5,7 +5,7 @@
   "fields": [
     {
       "name": "header",
-      "type": "map",
+      "type": {"type": "map", "values": "string"},
       "values": "string"
     },
     {

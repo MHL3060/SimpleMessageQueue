@@ -1,6 +1,7 @@
 //
 // Created by Ben Li on 2020-03-19.
 //
+#pragma  once
 
 #ifndef COMMON_H
 #define COMMON_H

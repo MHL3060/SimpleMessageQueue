@@ -4,14 +4,11 @@
 
 //message type
 #include <stdio.h>
-#include <avro.h>
 #include <avro/io.h>
 #include "common.h"
 #include "message.h"
 #include "log.h"
 
-
-#define SCHEMA_PATH "../schema/message.json"
 int prepare_message(char *header, char *data, message_t *message) {
     sprintf(message->header, "%s", header);
     sprintf(message->data, "%s", data);
@@ -39,10 +36,12 @@ int readSchema(char * fileName, char* content) {
 }
 
 int validateSchema() {
-    char schema[8192];
-    FILE * file = fopen(SCHEMA_PATH, "r");
-    avro_reader_file(file);
-    avro_reader_t * reader = avro_reader_file(file);
+    avro_schema_t person_schema;
+    if (avro_schema_from_json_literal(SCHEMA, &person_schema)) {
+        log_error("unable to parse message schema");
+        return -1;
+    }
+    return 0;
 }
 
 // message queue --------------------------------------------------------------
