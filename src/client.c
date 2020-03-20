@@ -23,6 +23,7 @@
 #include "log.h"
 #include "message_queue.h"
 #include "peer.h"
+#include "util.h"
 
 peer_t server;
 pthread_t message_producer;
@@ -219,7 +220,7 @@ int init_client(char *client_name) {
 
     // server socket always will be greater then STDIN_FILENO
     int maxfd = server.socket;
-    pthread_create(&message_producer, NULL, &init_heart_beat, client_name);
+    pthread_create(&message_producer, NULL, (void *)&init_heart_beat, client_name);
     while (1) {
         // Select() updates fd_set's, so we need to build fd_set's before each select()call.
         build_fd_sets(&server, &read_fds, &write_fds, &except_fds);

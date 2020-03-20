@@ -14,6 +14,6 @@
 #define log_error(...) syslog(LOG_ERR, __VA_ARGS__)
 #define log_fatal(...) syslog(LOG_CRIT, __VA_ARGS__)
 
-init_log(int level, char * name);
-close_log();
+void init_log(int level, char * name);
+void close_log();
 #endif

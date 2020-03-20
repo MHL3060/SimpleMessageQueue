@@ -15,7 +15,7 @@
 #include "peer.h"
 // peer -----------------------------------------------------------------------
 
-int peer_delete(peer_t *peer) {
+void peer_delete(peer_t *peer) {
     close(peer->socket);
     delete_message_queue(&peer->send_buffer);
 }
@@ -145,12 +145,12 @@ int peer_send_to_peer(peer_t *peer) {
 }
 
 
-int peer_enqueue_heart_beat(peer_t * peer, char * name, bool shouldSend, int sleepTimeInMilliSeconds) {
+void peer_enqueue_heart_beat(peer_t * peer, char * name, bool shouldSend, int sleepTimeInMilliSeconds) {
     while(1) {
         if (peer->socket != NO_SOCKET) {
             message_t message;
             char data[DATA_MAXSIZE];
-            sprintf(&data, "heartbeat from %s", name);
+            sprintf(data, "heartbeat from %s", name);
             prepare_message("header", data, &message);
             message.type = TYPE_HEART_BEAT;
 

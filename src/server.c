@@ -45,7 +45,7 @@ void handle_signal_action(int sig_number) {
     }
 }
 
-int send_heart_beat_messages() {
+void send_heart_beat_messages() {
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
        peer_enqueue_heart_beat(&connection_list[i], "server", false, 1000);
@@ -172,7 +172,7 @@ int handle_new_connection() {
     return -1;
 }
 
-int close_client_connection(peer_t *client) {
+void close_client_connection(peer_t *client) {
     log_info("Close client socket for %s.\n", peer_get_addres_str(client));
 
     close(client->socket);
@@ -240,7 +240,7 @@ int server_init(int *returnCode) {
     int high_sock = listen_sock;
 
     log_info("Waiting for incoming connections.\n");
-     pthread_create(&message_producer, NULL, &send_heart_beat_messages, NULL);
+     pthread_create(&message_producer, NULL, (void *)&send_heart_beat_messages, NULL);
     while (1) {
         build_fd_sets(&read_fds, &write_fds, &except_fds);
 
