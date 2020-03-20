@@ -83,7 +83,7 @@ int start_listen_socket(int *listen_sock) {
     struct sockaddr_in my_addr;
     memset(&my_addr, 0, sizeof(my_addr));
     my_addr.sin_family = AF_INET;
-    my_addr.sin_addr.s_addr = inet_addr(SERVER_IPV4_ADDR);
+    my_addr.sin_addr.s_addr = htonl (INADDR_ANY); //inet_addr(INADDR_ANY);
     my_addr.sin_port = htons(SERVER_LISTEN_PORT);
 
     if (bind(*listen_sock, (struct sockaddr *) &my_addr, sizeof(struct sockaddr)) != 0) {
@@ -314,12 +314,8 @@ int server_init(int *returnCode) {
 int main() {
     init_log(LOG_DEBUG, "server");
     int returnCode;
-    pthread_mutex_t log_mutex;
 
     pthread_mutex_init(&mutex, NULL);
-
-    pthread_mutex_init(&log_mutex, NULL);
-
 
     return server_init(&returnCode);
 }

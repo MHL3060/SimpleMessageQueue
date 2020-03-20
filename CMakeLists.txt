@@ -1,6 +1,10 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.12)
 project(server_client C)
 
 set(CMAKE_C_STANDARD 11)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 add_executable(server src/log.c src/server.c)
 add_executable(client src/log.c src/client.c)
+target_link_libraries(server Threads::Threads)
+target_link_libraries(client Threads::Threads)
