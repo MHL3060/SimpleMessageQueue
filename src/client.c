@@ -21,6 +21,8 @@
 
 #include "common.h"
 #include "log.h"
+#include "message_queue.h"
+#include "peer.h"
 
 peer_t server;
 pthread_t message_producer;
@@ -178,7 +180,7 @@ int handle_read_from_stdin(peer_t *server, char *client_name) {
 /* You should be careful when using this function in multythread program.
  * Ensure that server is thread-safe. */
 void shutdown_properly(int code) {
-    delete_peer(&server);
+    peer_delete(&server);
     log_debug("Shutdown client properly.\n");
     exit(code);
 }
@@ -190,7 +192,7 @@ int handle_received_message(message_t *message) {
 }
 
 void init_heart_beat(char *client_name) {
-    enqueue_heart_beat_message(&server, client_name, true, 3000);
+    peer_enqueue_heart_beat(&server, client_name, true, 3000);
 }
 
 int init_client(char *client_name) {
@@ -200,7 +202,7 @@ int init_client(char *client_name) {
 
     log_debug("Client '%s' start.\n", client_name);
 
-    create_peer(&server);
+    peer_create(&server);
     if (connect_server(&server) != 0)
         shutdown_properly(EXIT_FAILURE);
 
@@ -247,12 +249,12 @@ int init_client(char *client_name) {
                 }
 
                 if (FD_ISSET(server.socket, &read_fds)) {
-                    if (receive_from_peer(&server, &handle_received_message) != 0)
+                    if (peer_receive_from_peer(&server, &handle_received_message) != 0)
                         shutdown_properly(EXIT_FAILURE);
                 }
 
                 if (FD_ISSET(server.socket, &write_fds)) {
-                    if (send_to_peer(&server) != 0)
+                    if (peer_send_to_peer(&server) != 0)
                         shutdown_properly(EXIT_FAILURE);
                 }
 
@@ -268,8 +270,6 @@ int init_client(char *client_name) {
 
 int main(int argc, char **argv) {
     init_log(LOG_DEBUG, "client");
-    pthread_mutex_init(&mutex, NULL);
-
 
     char client_name[256];
     get_client_name(argc, argv, client_name);

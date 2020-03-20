@@ -18,6 +18,9 @@
 
 #include "common.h"
 #include "log.h"
+#include "peer.h"
+#include "util.h"
+
 #define MAX_CLIENTS 10
 
 
@@ -34,10 +37,10 @@ void shutdown_properly(int code);
 
 void handle_signal_action(int sig_number) {
     if (sig_number == SIGINT) {
-        log_info("SIGINT was catched!\n");
+        log_info("SIGINT was catched!");
         shutdown_properly(EXIT_SUCCESS);
     } else if (sig_number == SIGPIPE) {
-        log_info("SIGPIPE was catched!\n");
+        log_info("SIGPIPE was catched!");
         shutdown_properly(EXIT_SUCCESS);
     }
 }
@@ -45,7 +48,7 @@ void handle_signal_action(int sig_number) {
 int send_heart_beat_messages() {
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
-       enqueue_heart_beat_message(&connection_list[i], "server", false, 1000);
+       peer_enqueue_heart_beat(&connection_list[i], "server", false, 1000);
     }
 
 }
@@ -95,7 +98,7 @@ int start_listen_socket(int *listen_sock) {
         perror("listen");
         return -1;
     }
-    log_info("Accepting connections on port %d.\n", (int) SERVER_LISTEN_PORT);
+    log_info("Accepting connections on port %d.", (int) SERVER_LISTEN_PORT);
 
     return 0;
 }
@@ -174,7 +177,7 @@ int close_client_connection(peer_t *client) {
 
     close(client->socket);
     client->socket = NO_SOCKET;
-    dequeue_all(&client->send_buffer);
+    message_dequeue_all(&client->send_buffer);
     client->current_sending_byte = -1;
     client->current_receiving_byte = 0;
 }
@@ -227,7 +230,7 @@ int server_init(int *returnCode) {
     int i;
     for (i = 0; i < MAX_CLIENTS; ++i) {
         connection_list[i].socket = NO_SOCKET;
-        create_peer(&connection_list[i]);
+        peer_create(&connection_list[i]);
     }
 
     fd_set read_fds;
@@ -282,14 +285,14 @@ int server_init(int *returnCode) {
 
                 for (i = 0; i < MAX_CLIENTS; ++i) {
                     if (connection_list[i].socket != NO_SOCKET && FD_ISSET(connection_list[i].socket, &read_fds)) {
-                        if (receive_from_peer(&connection_list[i], &handle_received_message) != 0) {
+                        if (peer_receive_from_peer(&connection_list[i], &handle_received_message) != 0) {
                             close_client_connection(&connection_list[i]);
                             continue;
                         }
                     }
                     if (connection_list[i].socket != NO_SOCKET && FD_ISSET(connection_list[i].socket, &write_fds)) {
                         log_info("now it is our turn to send");
-                        if (send_to_peer(&connection_list[i]) != 0) {
+                        if (peer_send_to_peer(&connection_list[i]) != 0) {
                             close_client_connection(&connection_list[i]);
                             continue;
                         }
@@ -313,8 +316,6 @@ int server_init(int *returnCode) {
 int main() {
     init_log(LOG_DEBUG, "server");
     int returnCode;
-
-    pthread_mutex_init(&mutex, NULL);
 
     return server_init(&returnCode);
 }
