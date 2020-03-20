@@ -46,7 +46,7 @@ void handle_signal_action(int sig_number) {
 int send_heart_beat_messages() {
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
-       enqueue_heart_beat_message(&connection_list[i], "server", false, 1);
+       enqueue_heart_beat_message(&connection_list[i], "server", false, 1000);
     }
 
 }
@@ -188,6 +188,7 @@ int handle_read_from_stdin() {
 
     // Create new message and enqueue it.
     message_t new_message;
+    new_message.type = TYPE_DATA;
     prepare_message(SERVER_NAME, read_buffer, &new_message);
     print_message(&new_message);
 
@@ -207,7 +208,7 @@ int handle_read_from_stdin() {
 }
 
 int handle_received_message(message_t *message) {
-    log_info("Received message from client.\n");
+    log_info("Received message from client.");
     print_message(message);
     return 0;
 }
@@ -287,8 +288,8 @@ int server_init(int *returnCode) {
                             continue;
                         }
                     }
-
                     if (connection_list[i].socket != NO_SOCKET && FD_ISSET(connection_list[i].socket, &write_fds)) {
+                        log_info("now it is our turn to send");
                         if (send_to_peer(&connection_list[i]) != 0) {
                             close_client_connection(&connection_list[i]);
                             continue;
@@ -311,7 +312,14 @@ int server_init(int *returnCode) {
 }
 
 int main() {
+    init_log(LOG_DEBUG, "server");
     int returnCode;
-    log_set_level(2);
+    pthread_mutex_t log_mutex;
+
+    pthread_mutex_init(&mutex, NULL);
+
+    pthread_mutex_init(&log_mutex, NULL);
+
+
     return server_init(&returnCode);
 }

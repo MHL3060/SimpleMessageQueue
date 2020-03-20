@@ -13,7 +13,7 @@
 /* Maximum bytes that can be send() or recv() via net by one call.
  * It's a good idea to test sending one byte by one.
  */
-#define MAX_SEND_SIZE 1024 * 8
+#define MAX_SEND_SIZE 1024
 
 /* Size of send queue (messages). */
 #define MAX_MESSAGES_BUFFER_SIZE 100
@@ -30,7 +30,8 @@ pthread_mutex_t mutex;
 
 //message type
 #define  TYPE_HEART_BEAT 1;
-#define  TYPE_DATA 2;
+#define  TYPE_DATA 2
+#define  TYPE_OK 3
 // message --------------------------------------------------------------------
 
 typedef struct {
@@ -50,6 +51,7 @@ int prepare_message(char *header, char *data, message_t *message) {
 
 int print_message(message_t *message) {
     log_info("Message: \"%s: %s\"", message->header, message->data);
+    printf("Message: \"%s: %s\"", message->header, message->data);
     return 0;
 }
 
@@ -83,7 +85,7 @@ int enqueue(message_queue_t *queue, message_t *message) {
         queue->current++;
         result = 0;
     }
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_unlock(&mutex);
     return result;
 }
 int dequeue(message_queue_t *queue, message_t *message) {
@@ -95,7 +97,7 @@ int dequeue(message_queue_t *queue, message_t *message) {
         memcpy(message, &queue->data[queue->current - 1], sizeof(message_t));
         queue->current--;
     }
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_unlock(&mutex);
     return result;
 }
 
@@ -162,7 +164,6 @@ int peer_add_to_send(peer_t *peer, message_t *message) {
 /* Receive message from peer and handle it with message_handler(). */
 int receive_from_peer(peer_t *peer, int (*message_handler)(message_t *)) {
     log_debug("Ready for recv() from %s.", peer_get_addres_str(peer));
-
     size_t len_to_receive;
     ssize_t received_count;
     size_t received_total = 0;
@@ -292,6 +293,8 @@ int read_from_stdin(char *read_buffer, size_t max_len) {
     return 0;
 }
 
+
+
 int enqueue_heart_beat_message(peer_t * peer, char * name, bool shouldSend, int sleepTimeInMilliSeconds) {
     while(1) {
         if (peer->socket != NO_SOCKET) {
@@ -309,9 +312,4 @@ int enqueue_heart_beat_message(peer_t * peer, char * name, bool shouldSend, int 
         usleep(sleepTimeInMilliSeconds * 1000);
     }
 }
-
-int read_from(char *read_buffer, size_t max_len) {
-
-}
-
 #endif /* COMMON_H */

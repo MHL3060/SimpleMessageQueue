@@ -138,16 +138,14 @@ int handle_received_message(message_t *message) {
 }
 
 void init_heart_beat(char * client_name) {
-    enqueue_heart_beat_message(&server, client_name, true, 3);
+    enqueue_heart_beat_message(&server, client_name, true, 3000);
 }
 
-int main(int argc, char **argv) {
-    log_set_level(2);
+int init_client(char *client_name) {
+
     if (setup_signals() != 0)
         exit(EXIT_FAILURE);
 
-    char client_name[256];
-    get_client_name(argc, argv, client_name);
     log_debug("Client '%s' start.\n", client_name);
 
     create_peer(&server);
@@ -163,7 +161,7 @@ int main(int argc, char **argv) {
     fd_set write_fds;
     fd_set except_fds;
 
-    log_debug("Waiting for server message or stdin input. Please, type text to send:\n");
+    log_debug("Waiting for server message or stdin input. Please, type text to send:");
 
     // server socket always will be greater then STDIN_FILENO
     int maxfd = server.socket;
@@ -214,6 +212,16 @@ int main(int argc, char **argv) {
 
         log_debug("And we are still waiting for server or stdin activity. You can type something to send:\n");
     }
+}
 
+int main(int argc, char **argv) {
+    init_log(LOG_DEBUG, "client");
+    pthread_mutex_init(&mutex, NULL);
+    
+
+
+    char client_name[256];
+    get_client_name(argc, argv, client_name);
+    init_client(client_name);
     return 0;
 }
