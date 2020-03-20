@@ -17,12 +17,14 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <netdb.h>
 
 #include "common.h"
 #include "log.h"
 
 peer_t server;
 pthread_t message_producer;
+
 void shutdown_properly(int code);
 
 void handle_signal_action(int sig_number) {
@@ -58,20 +60,70 @@ int get_client_name(int argc, char **argv, char *client_name) {
 
     return 0;
 }
+/**
+ * the host need to be resolve.
+ * @param host
+ * @param res - address for the result if return is = 0;
+ * @return
+ */
+int lookup_host(const char *host, char * addrstr) {
+    struct addrinfo hints, *res;
+    int errcode;
+
+    void *ptr;
+
+    memset (&hints, 0, sizeof(hints));
+    hints.ai_family = PF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags |= AI_CANONNAME;
+
+    errcode = getaddrinfo(host, NULL, &hints, &res);
+    if (errcode != 0) {
+        perror("getaddrinfo");
+        return -1;
+    }
+
+    printf("Host: %s\n", host);
+    while (res) {
+        inet_ntop(res->ai_family, res->ai_addr->sa_data, addrstr, 100);
+
+        switch (res->ai_family) {
+            case AF_INET:
+                ptr = &((struct sockaddr_in *) res->ai_addr)->sin_addr;
+                break;
+            case AF_INET6:
+                ptr = &((struct sockaddr_in6 *) res->ai_addr)->sin6_addr;
+                break;
+        }
+        inet_ntop(res->ai_family, ptr, addrstr, 100);
+        log_info("IPv%d address: %s (%s)\n", res->ai_family == PF_INET6 ? 6 : 4,
+               addrstr, res->ai_canonname);
+        res = res->ai_next;
+    }
+    freeaddrinfo(res);
+    return 0;
+}
+
 
 int connect_server(peer_t *server) {
     // create socket
+    char ipAddress[100];
+    int error = lookup_host(SERVER_IPV4_ADDR, ipAddress);
+    if (error) {
+        return -1;
+    }
+
     server->socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server->socket < 0) {
         perror("socket()");
         return -1;
     }
 
-    // set up addres
+    // set up address
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr(SERVER_IPV4_ADDR);
+    server_addr.sin_addr.s_addr = inet_addr(ipAddress);
     server_addr.sin_port = htons(SERVER_LISTEN_PORT);
 
     server->addres = server_addr;
@@ -137,7 +189,7 @@ int handle_received_message(message_t *message) {
     return 0;
 }
 
-void init_heart_beat(char * client_name) {
+void init_heart_beat(char *client_name) {
     enqueue_heart_beat_message(&server, client_name, true, 3000);
 }
 
@@ -217,7 +269,6 @@ int init_client(char *client_name) {
 int main(int argc, char **argv) {
     init_log(LOG_DEBUG, "client");
     pthread_mutex_init(&mutex, NULL);
-    
 
 
     char client_name[256];

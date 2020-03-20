@@ -21,7 +21,7 @@
 #define SENDER_MAXSIZE 128
 #define DATA_MAXSIZE 512
 
-#define SERVER_IPV4_ADDR "127.0.0.1"
+#define SERVER_IPV4_ADDR "atlin"
 #define SERVER_LISTEN_PORT 33235
 
 #define NO_SOCKET -1
@@ -51,7 +51,6 @@ int prepare_message(char *header, char *data, message_t *message) {
 
 int print_message(message_t *message) {
     log_info("Message: \"%s: %s\"", message->header, message->data);
-    printf("Message: \"%s: %s\"", message->header, message->data);
     return 0;
 }
 

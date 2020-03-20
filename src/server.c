@@ -18,7 +18,6 @@
 
 #include "common.h"
 #include "log.h"
-
 #define MAX_CLIENTS 10
 
 
