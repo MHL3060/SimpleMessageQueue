@@ -5,11 +5,16 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <avro.h>
 
 #include "common.h"
 #include "message_queue.h"
 #include "peer.h"
 
+
+void transform(char * msg) {
+
+}
 int message_create_queue(int queue_size, message_queue_t *queue) {
     queue->data = calloc(queue_size, sizeof(message_t));
     queue->size = queue_size;

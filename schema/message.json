@@ -1,0 +1,20 @@
+{
+  "namespace": "simple.message.queue.avro",,
+  "type": "record",
+  "name" : "message",
+  "fields": [
+    {
+      "name": "header",
+      "type": "map",
+      "values": "string"
+    },
+    {
+      "name": "type",
+      "type": "string"
+    },
+    {
+      "name": "payload",
+      "type": "bytes"
+    }
+  ]
+}
