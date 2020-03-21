@@ -3,12 +3,20 @@
 //
 #include "log.h"
 #include "client.h"
-int main(int argc, char **argv) {
-    init_log(LOG_DEBUG, "client");
+#include "argument_handler.h"
+#include "common.h"
 
+int main(int argc, char **argv) {
+
+    Arguments arguments;
+    parse_args(&arguments, argc, argv);
+
+    init_log(arguments.logLevel, "client");
+
+    log_info("connect to host: %s, port : %d ", arguments.hostName, arguments.port);
     char client_name[256];
     get_client_name(argc, argv, client_name);
-    client_init(client_name);
+    client_init(&arguments, client_name);
     return 0;
 }
 

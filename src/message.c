@@ -9,6 +9,7 @@
 #include "message.h"
 #include "log.h"
 
+avro_schema_t person_schema;
 int prepare_message(char *header, char *data, message_t *message) {
     sprintf(message->header, "%s", header);
     sprintf(message->data, "%s", data);
@@ -20,27 +21,32 @@ int print_message(message_t *message) {
     return 0;
 }
 
-
-int readSchema(char * fileName, char* content) {
-    FILE * file = fopen(fileName, "r");
-    if (file == NULL) {
-        return -1;
-    }
-    int size = fread(file, sizeof(&content),1, content);
-    fclose(file);
-    if (size <= 0) {
-        return -1;
-    } else {
-        return size;
-    }
-}
-
 int validateSchema() {
     avro_schema_t person_schema;
     if (avro_schema_from_json_literal(SCHEMA, &person_schema)) {
         log_error("unable to parse message schema");
         return -1;
     }
+    return 0;
+}
+
+int message_convert_message_to_avro_record(message_t * message, avro_datum_t * datum) {
+    avro_datum_t type = avro_int32(message->type);
+    avro_datum_t data = avro_bytes(message->data, message->data_size);
+
+    if (avro_record_set(datum, "type", type) ||
+        avro_record_set(datum, "data", data)) {
+        return -1;
+    } else {
+        avro_datum_decref(type);
+        avro_datum_decref(data);
+        return 0;
+    }
+}
+
+int message_convert_datum_to_message(avro_datum_t * datum, message_t * message) {
+
+
     return 0;
 }
 

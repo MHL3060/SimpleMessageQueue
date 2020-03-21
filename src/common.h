@@ -33,10 +33,11 @@
 #define SENDER_MAXSIZE 128
 #define DATA_MAXSIZE 512
 typedef struct {
-    char type;
+    int type;
     char version;
     char header[SENDER_MAXSIZE];
     char data[DATA_MAXSIZE];
+    int data_size;
 
 } message_t;
 
@@ -64,5 +65,12 @@ typedef struct {
     message_t receiving_buffer;
     size_t current_receiving_byte;
 } peer_t;
+
+typedef struct {
+    char * hostName;
+    unsigned short port;
+    int dataType;
+    int logLevel;
+} Arguments;
 
 #endif /* COMMON_H */

@@ -14,7 +14,13 @@ link_directories(
 
 )
 
-add_library(common STATIC log.c util.c message.c message_queue.c peer.c)
+add_library(common STATIC
+        log.c
+        argument_handler.c
+        util.c
+        message.c
+        message_queue.c
+        peer.c)
 
 add_executable(server server.c server_main.c)
 add_executable(client client.c client_main.c)

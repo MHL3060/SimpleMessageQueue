@@ -109,10 +109,10 @@ int lookup_host(const char *host, char * addrstr) {
 }
 
 
-int connect_server(peer_t *server) {
+int connect_server(Arguments* arguments, peer_t *server) {
     // create socket
     char ipAddress[100];
-    int error = lookup_host(SERVER_IPV4_ADDR, ipAddress);
+    int error = lookup_host(arguments->hostName, ipAddress);
     if (error) {
         return -1;
     }
@@ -128,7 +128,7 @@ int connect_server(peer_t *server) {
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr(ipAddress);
-    server_addr.sin_port = htons(SERVER_LISTEN_PORT);
+    server_addr.sin_port = htons(arguments->port);
 
     server->addres = server_addr;
 
@@ -197,7 +197,7 @@ void init_heart_beat(char *client_name) {
     peer_enqueue_heart_beat(&server, client_name, true, 3000);
 }
 
-int client_init(char *client_name) {
+int client_init(Arguments * arguments, char *client_name) {
 
     if (setup_signals() != 0)
         exit(EXIT_FAILURE);
@@ -205,7 +205,7 @@ int client_init(char *client_name) {
     log_debug("Client '%s' start.\n", client_name);
 
     peer_create(&server);
-    if (connect_server(&server) != 0)
+    if (connect_server(arguments, &server) != 0)
         shutdown_properly(EXIT_FAILURE);
 
     /* Set nonblock for stdin. */
