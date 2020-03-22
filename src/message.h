@@ -2,6 +2,7 @@
 // Created by Ben Li on 2020-03-19.
 //
 
+#include <avro/schema.h>
 #ifndef SERVER_CLIENT_MESSAGE_H
 #define SERVER_CLIENT_MESSAGE_H
 
@@ -17,12 +18,11 @@
                 "  \"fields\": [" \
                 "    {" \
                 "      \"name\": \"header\"," \
-                "      \"type\": {\"type\": \"map\", \"values\": \"string\"}," \
-                "      \"values\": \"string\"" \
+                "      \"type\": {\"type\": \"map\", \"values\": \"string\"}" \
                 "    }," \
                 "    {" \
                 "      \"name\": \"type\"," \
-                "      \"type\": \"string\"" \
+                "      \"type\": \"int\"" \
                 "    }," \
                 "    {" \
                 "      \"name\": \"payload\"," \
@@ -34,5 +34,8 @@
 
 int prepare_message(char *header, char *data, message_t *message);
 int print_message(message_t *message);
-int validateSchema();
+int validate_schema(avro_schema_t * message_schema);
+
+int message_to_bytes(message_t * message, unsigned char byteArrayResult[], int * byte_array_size);
+int bytes_to_message(char ** avroByteStream, message_t * message);
 #endif //SERVER_CLIENT_MESSAGE_H

@@ -8,6 +8,8 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <avro.h>
+#include <pthread.h>
 #include "common.h"
 #include "log.h"
 #include "message.h"
@@ -40,6 +42,7 @@ char *peer_get_addres_str(peer_t *peer) {
 
 int peer_add_to_send(peer_t *peer, message_t *message) {
     if (peer->socket != NO_SOCKET) {
+
         return message_enqueue(&peer->send_buffer, message);
     } else {
         return -1;
@@ -99,23 +102,28 @@ int peer_send_to_peer(peer_t *peer) {
     size_t len_to_send;
     ssize_t send_count;
     size_t send_total = 0;
+    peer->total_sending_buffer_size = 0;
     do {
         // If sending message has completely sent and there are messages in queue, why not send them?
-        if (peer->current_sending_byte < 0 || peer->current_sending_byte >= sizeof(peer->sending_buffer)) {
+
+        if (peer->current_sending_byte < 0 || peer->current_sending_byte >= peer->total_sending_buffer_size) {
             log_debug("There is no pending to send() message, maybe we can find one in queue... ");
-            if (message_dequeue(&peer->send_buffer, &peer->sending_buffer) != 0) {
+            message_t current;
+            if (message_dequeue(&peer->send_buffer, &current) != 0) {
                 peer->current_sending_byte = -1;
                 log_debug("No, there is nothing to send() anymore.");
                 break;
             }
+            message_to_bytes(&current, &peer->sending_buffer, &peer->total_sending_buffer_size);
             log_debug("Yes, pop and send() one of them.");
             peer->current_sending_byte = 0;
         }
 
         // Count bytes to send.
-        len_to_send = sizeof(peer->sending_buffer) - peer->current_sending_byte;
-        if (len_to_send > MAX_SEND_SIZE)
+        len_to_send = peer->total_sending_buffer_size - peer->current_sending_byte;
+        if (len_to_send > MAX_SEND_SIZE) {
             len_to_send = MAX_SEND_SIZE;
+        }
 
         log_debug("Let's try to send() %zd bytes... ", len_to_send);
         send_count = send(peer->socket, (char *) &peer->sending_buffer + peer->current_sending_byte, len_to_send, 0);
@@ -144,6 +152,60 @@ int peer_send_to_peer(peer_t *peer) {
     return 0;
 }
 
+int peer_send_to_peer2(peer_t *peer) {
+    log_debug("Ready for send() to %s.", peer_get_addres_str(peer));
+
+    size_t len_to_send;
+    ssize_t send_count;
+    size_t send_total = 0;
+    //do we need lock in here?
+    while (peer->send_buffer.current > 0) {
+        pthread_mutex_lock(&peer->send_buffer.lock);
+        message_t current;
+        memset(&current, '\0', sizeof(message_t));
+        if (message_peak(&peer->send_buffer, &current) == 0) {
+            message_to_bytes(&current, peer->sending_buffer, &peer->total_sending_buffer_size);
+            peer->current_sending_byte = 0;
+            while (peer->current_sending_byte < peer->total_sending_buffer_size) {
+                len_to_send = peer->total_sending_buffer_size - peer->current_sending_byte;
+                if (len_to_send > MAX_SEND_SIZE) {
+                    len_to_send = MAX_SEND_SIZE;
+                }
+                log_debug("Let's try to send() %zd bytes... ", len_to_send);
+                send_count = send(peer->socket, (char *) &peer->sending_buffer + peer->current_sending_byte,
+                                  len_to_send, 0);
+                if (send_count < 0) {
+                    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                        log_debug("peer is not ready right now, try again later.");
+                    } else {
+                        perror("send() from peer error");
+                        pthread_mutex_unlock(&peer->send_buffer.lock);
+                        return -1;
+                    }
+                }    // we have read as many as possible
+                else if (send_count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+                    break;
+                } else if (send_count == 0) {
+                    log_debug("send()'ed 0 bytes. It seems that peer can't accept data right now. Try again later.");
+                } else if (send_count > 0) {
+                    peer->current_sending_byte += send_count;
+                    send_total += send_count;
+                    log_debug("send()'ed %zd bytes.", send_count);
+                }
+            }
+            if (peer->current_sending_byte >= peer->total_sending_buffer_size) {
+                log_info("we have successfully send this message. remove from the queue");
+                message_dequeue_no_lock(&peer->send_buffer, &current);
+            }
+        }
+        pthread_mutex_unlock(&peer->send_buffer.lock);
+
+    }
+
+
+    log_debug("Total send()'ed %zu bytes.", send_total);
+    return 0;
+}
 
 void peer_enqueue_heart_beat(peer_t * peer, char * name, bool shouldSend, int sleepTimeInMilliSeconds) {
     while(1) {
@@ -153,7 +215,7 @@ void peer_enqueue_heart_beat(peer_t * peer, char * name, bool shouldSend, int sl
             sprintf(data, "heartbeat from %s", name);
             prepare_message("header", data, &message);
             message.type = TYPE_HEART_BEAT;
-
+            message.data_size = strlen(data) + 1;
             peer_add_to_send(peer, &message);
             if(shouldSend) {
                 peer_send_to_peer(peer);

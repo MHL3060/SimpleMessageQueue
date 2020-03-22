@@ -8,11 +8,8 @@ int main() {
     Arguments arguments;
     init_log(LOG_DEBUG, "server");
     int returnCode;
-    if (validateSchema() != 0) {
-        log_error("validation error");
-        return -1;
-    } else {
-        return server_init(&returnCode);
-    }
+
+    return server_init(&returnCode);
+
 
 }
