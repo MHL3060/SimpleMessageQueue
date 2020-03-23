@@ -24,7 +24,7 @@ int message_enqueue(message_queue_t *queue, message_t *message);
 int message_peak(message_queue_t * queue, message_t *message);
 int message_dequeue_no_lock(message_queue_t *queue, message_t *message);
 int message_dequeue(message_queue_t *queue, message_t *message);
-int message_dequeue_to_byte_stream(message_queue_t *queue, char * avro_stream_bytes, int * byteSize);
+int message_dequeue_to_byte_stream(message_queue_t *queue, unsigned char * avro_stream_bytes, int * byteSize);
 int message_dequeue_all(message_queue_t *queue);
 
 

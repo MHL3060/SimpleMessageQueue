@@ -35,15 +35,15 @@
 typedef struct {
     int type;
     char version;
-    char header[SENDER_MAXSIZE];
-    char data[DATA_MAXSIZE];
+    unsigned char header[SENDER_MAXSIZE];
+    unsigned char data[DATA_MAXSIZE];
     int data_size;
 
 } message_t;
 
 typedef struct {
     int size;
-    void *data;
+    message_t *data;
     int current;
     pthread_mutex_t lock;
 } message_queue_t;
@@ -58,7 +58,7 @@ typedef struct {
      * In case we doesn't send whole message per one call send().
      * And current_sending_byte is a pointer to the part of data that will be send next call.
      */
-    char * sending_buffer[8192];
+    unsigned char sending_buffer[8192];
     size_t total_sending_buffer_size;
     size_t current_sending_byte;
 

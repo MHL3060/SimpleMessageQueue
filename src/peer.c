@@ -56,6 +56,8 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(message_t *)) {
     size_t len_to_receive;
     ssize_t received_count;
     size_t received_total = 0;
+    unsigned char * payload[8192];
+
     do {
         // Is completely received?
         if (peer->current_receiving_byte >= sizeof(peer->receiving_buffer)) {
@@ -103,18 +105,19 @@ int peer_send_to_peer(peer_t *peer) {
     ssize_t send_count;
     size_t send_total = 0;
     peer->total_sending_buffer_size = 0;
+    message_t current;
     do {
         // If sending message has completely sent and there are messages in queue, why not send them?
 
         if (peer->current_sending_byte < 0 || peer->current_sending_byte >= peer->total_sending_buffer_size) {
             log_debug("There is no pending to send() message, maybe we can find one in queue... ");
-            message_t current;
+            memset(&current, '\0', sizeof(message_t));
             if (message_dequeue(&peer->send_buffer, &current) != 0) {
                 peer->current_sending_byte = -1;
                 log_debug("No, there is nothing to send() anymore.");
                 break;
             }
-            message_to_bytes(&current, &peer->sending_buffer, &peer->total_sending_buffer_size);
+            message_to_bytes(&current, peer->sending_buffer, &peer->total_sending_buffer_size);
             log_debug("Yes, pop and send() one of them.");
             peer->current_sending_byte = 0;
         }
@@ -126,7 +129,7 @@ int peer_send_to_peer(peer_t *peer) {
         }
 
         log_debug("Let's try to send() %zd bytes... ", len_to_send);
-        send_count = send(peer->socket, (char *) &peer->sending_buffer + peer->current_sending_byte, len_to_send, 0);
+        send_count = send(peer->socket, (unsigned char *) &peer->sending_buffer + peer->current_sending_byte, len_to_send, 0);
         if (send_count < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 log_debug("peer is not ready right now, try again later.");
@@ -211,6 +214,7 @@ void peer_enqueue_heart_beat(peer_t * peer, char * name, bool shouldSend, int sl
     while(1) {
         if (peer->socket != NO_SOCKET) {
             message_t message;
+            memset(&message, '\0', sizeof(message_t));
             char data[DATA_MAXSIZE];
             sprintf(data, "heartbeat from %s", name);
             prepare_message("header", data, &message);

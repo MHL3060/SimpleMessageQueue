@@ -36,6 +36,6 @@ int prepare_message(char *header, char *data, message_t *message);
 int print_message(message_t *message);
 int validate_schema(avro_schema_t * message_schema);
 
-int message_to_bytes(message_t * message, unsigned char byteArrayResult[], int * byte_array_size);
-int bytes_to_message(char ** avroByteStream, message_t * message);
+int message_to_bytes(message_t * message, unsigned char * byteArrayResult, int * byte_array_size);
+int message_bytes_to_message(char ** avroByteStream, message_t * message);
 #endif //SERVER_CLIENT_MESSAGE_H

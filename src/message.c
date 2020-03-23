@@ -14,7 +14,7 @@
 int prepare_message(char *header, char *data, message_t *message) {
     sprintf(message->header, "%s", header);
     sprintf(message->data, "%s", data);
-    message->data_size = strlen(message->data);
+    message->data_size = strlen(message->data) + 1;
     return 0;
 }
 
@@ -85,13 +85,13 @@ int message_to_bytes(message_t * message, unsigned char * byteArrayResult, int *
         return -1;
     }
     size_t size = avro_writer_tell(writer);
-    memcpy(byteArrayResult[], buffer, size);
-
+    memcpy(byteArrayResult, buffer, size);
+    avro_datum_decref(avroMessage);
     * byte_array_size = size;
     return 0;
 }
 
-int bytes_to_message(char ** avroByteStream, message_t * message) {
+int message_bytes_to_message(char ** avroByteStream, message_t * message) {
     avro_schema_t  schema;
     validate_schema(&schema);
     avro_datum_t avroMessage = avro_record(schema);
