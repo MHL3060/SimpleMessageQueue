@@ -91,7 +91,7 @@ int message_to_bytes(message_t * message, unsigned char * byteArrayResult, int *
     return 0;
 }
 
-int message_bytes_to_message(char ** avroByteStream, message_t * message) {
+int message_bytes_to_message(unsigned char * avroByteStream, message_t * message) {
     avro_schema_t  schema;
     validate_schema(&schema);
     avro_datum_t avroMessage = avro_record(schema);

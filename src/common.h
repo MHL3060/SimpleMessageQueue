@@ -63,7 +63,7 @@ typedef struct {
     size_t current_sending_byte;
 
     /* The same for the receiving message. */
-    message_t receiving_buffer;
+    unsigned char receiving_buffer[8192];
     size_t current_receiving_byte;
     size_t total_received_buffer_size;
 } peer_t;
@@ -75,4 +75,8 @@ typedef struct {
     int logLevel;
 } Arguments;
 
+
+
+static const unsigned char END_OF_MESSAGE_PAYLOAD[] = { 0xBA, 0xDB, 0xEE, 0xFB, 0xAD, 0xF0, 0x0D};
+static const int END_OF_MESSAGE_PAYLOAD_SIZE = sizeof(END_OF_MESSAGE_PAYLOAD);
 #endif /* COMMON_H */
