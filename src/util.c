@@ -54,6 +54,7 @@ bool is_array_equals(unsigned char * first, unsigned char * second, size_t size)
     return equals;
 }
 
+/*
 int copy_last_elements(unsigned char * array, size_t total_array_size, unsigned char * last_elements) {
     size_t size = sizeof(&last_elements);
 
@@ -64,4 +65,4 @@ int copy_last_elements(unsigned char * array, size_t total_array_size, unsigned 
         elemnent_addr++;
     }
     return 0;
-}
+}*/

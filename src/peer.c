@@ -6,8 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <avro.h>
 #include <pthread.h>
 #include "common.h"
@@ -52,7 +54,7 @@ int peer_add_to_send(peer_t *peer, message_t *message) {
 }
 
 /* Receive message from peer and handle it with message_handler(). */
-int peer_receive_from_peer(peer_t *peer, int (*message_handler)(message_t *)) {
+int peer_receive_from_peer2(peer_t *peer, int (*message_handler)(message_t *)) {
     log_debug("Ready for recv() from %s.", peer_get_addres_str(peer));
 
     ssize_t received_count;
@@ -60,11 +62,28 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(message_t *)) {
     unsigned char payload[MAX_SEND_SIZE];
     bool end_of_message = false;
     message_t message;
+
+    Msghdr msg;
+    Iovec iov;
     do {
+        memset(&msg, '\0', sizeof(Msghdr));
+        memset(&iov, 0, sizeof(Iovec));
+
+        msg.msg_name = NULL;
+        msg.msg_namelen = 0;
+        iov.iov_base = payload;
+        //replace sizeof(data) by MAX
+        iov.iov_len = MAX_SEND_SIZE;
+        msg.msg_iov = &iov;
+        msg.msg_iovlen = 1;
+        msg.msg_control = NULL;
+        msg.msg_controllen = 0;
+        msg.msg_flags = 0;
+
         // Is completely received?
         if (end_of_message) {
             memset(&message, '\0', sizeof(message_t));
-            message_bytes_to_message(peer->receiving_buffer, &message);
+            message_bytes_to_message(peer->receiving_buffer, received_count, &message);
 
             message_handler(&message);
             peer->current_receiving_byte = 0;
@@ -90,7 +109,7 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(message_t *)) {
             log_debug("recv() 0 bytes. Peer gracefully shutdown.");
             return -1;
         } else if (received_count > 0) {
-            unsigned char payload_elements
+            unsigned char payload_elements;
             if (received_count == END_OF_MESSAGE_PAYLOAD_SIZE && is_array_equals(END_OF_MESSAGE_PAYLOAD, payload,END_OF_MESSAGE_PAYLOAD_SIZE )) {
                 end_of_message = true;
             }else {
@@ -107,7 +126,7 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(message_t *)) {
     return 0;
 }
 
-int peer_send_to_peer(peer_t *peer) {
+int peer_send_to_peer2(peer_t *peer) {
     log_debug("Ready for send() to %s.", peer_get_addres_str(peer));
 
     size_t len_to_send;
@@ -170,6 +189,151 @@ int peer_send_to_peer(peer_t *peer) {
             log_debug("send()'ed %zd bytes.", send_count);
         }
     } while (send_count > 0);
+
+    log_debug("Total send()'ed %zu bytes.", send_total);
+    return 0;
+}
+
+void preset_msg_iovec(Msghdr * msg, Iovec * iovec) {
+    memset(msg, 0, sizeof(Msghdr));
+    memset(iovec, 0, sizeof(Iovec));
+    msg->msg_name = NULL;
+    msg->msg_namelen = 0;
+    msg->msg_iov = iovec;
+    msg->msg_iovlen = 1;
+    msg->msg_control = NULL;
+    msg->msg_controllen = 0;
+    msg->msg_flags = 0;
+}
+
+int peer_receive_from_peer(peer_t *peer, int (*message_handler)(message_t *)) {
+    log_debug("Ready for recv() from %s.", peer_get_addres_str(peer));
+
+    ssize_t received_count;
+    size_t received_total = 0;
+    unsigned char payload[MAX_SEND_SIZE];
+    bool end_of_message = false;
+    message_t message;
+
+    Msghdr msg;
+    Iovec iov;
+    while(true) {
+        memset(&msg, '\0', sizeof(Msghdr));
+        memset(&iov, 0, sizeof(Iovec));
+
+        msg.msg_name = NULL;
+        msg.msg_namelen = 0;
+        iov.iov_base = payload;
+        //replace sizeof(data) by MAX
+        iov.iov_len = MAX_SEND_SIZE;
+        msg.msg_iov = &iov;
+        msg.msg_iovlen = 1;
+        msg.msg_control = NULL;
+        msg.msg_controllen = 0;
+        msg.msg_flags = 0;
+
+        // Is completely received?
+        if (end_of_message) {
+            memset(&message, '\0', sizeof(message_t));
+            message_bytes_to_message(peer->receiving_buffer,received_count,  &message);
+
+            message_handler(&message);
+            peer->current_receiving_byte = 0;
+            end_of_message = false;
+        };
+
+        log_debug("Let's try to recv() %zd bytes... ", MAX_SEND_SIZE);
+        memset(payload, '\0', sizeof(payload));
+        received_count = recvmsg(peer->socket, &msg, 0);
+
+        if (received_count < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                log_debug("peer is not ready right now, try again later.");
+            } else {
+                perror("recv() from peer error");
+                return -1;
+            }
+        } else if (received_count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            break;
+        }
+            // If recv() returns 0, it means that peer gracefully shutdown. Shutdown client.
+        else if (received_count == 0) {
+            log_debug("recv() 0 bytes. Peer gracefully shutdown.");
+            return -1;
+        } else if (received_count > 0) {
+
+            memset(&message, '\0', sizeof(message_t));
+            message_bytes_to_message(payload, received_count, &message);
+
+            message_handler(&message);
+            peer->current_receiving_byte = 0;
+            end_of_message = false;
+
+            /*if (received_count == END_OF_MESSAGE_PAYLOAD_SIZE && is_array_equals(END_OF_MESSAGE_PAYLOAD, payload,END_OF_MESSAGE_PAYLOAD_SIZE )) {
+                end_of_message = true;
+            }else {
+                memcpy(peer->receiving_buffer + peer->current_receiving_byte, payload, received_count);
+            }
+            */
+            peer->current_receiving_byte += received_count;
+            received_total += received_count;
+            log_debug("recv() %zd bytes", received_count);
+        }
+    };
+
+    log_debug("Total recv()'ed %zu bytes.", received_total);
+    return 0;
+}
+
+int peer_send_to_peer(peer_t *peer) {
+    log_debug("Ready for send() to %s.", peer_get_addres_str(peer));
+
+    size_t len_to_send;
+    ssize_t send_count;
+    size_t send_total = 0;
+    peer->total_sending_buffer_size = 0;
+    message_t current;
+
+    struct msghdr msg;
+    struct iovec iov;
+    while (true) {
+        // If sending message has completely sent and there are messages in queue, why not send them?
+        preset_msg_iovec(&msg, &iov);
+
+        log_debug("There is no pending to send() message, maybe we can find one in queue... ");
+        memset(&current, '\0', sizeof(message_t));
+        if (message_dequeue(&peer->send_buffer, &current) != 0) {
+            peer->current_sending_byte = -1;
+            log_debug("No, there is nothing to send() anymore.");
+            break;
+        }
+        message_to_bytes(&current, peer->sending_buffer, &peer->total_sending_buffer_size);
+        log_debug("Yes, pop and send() one of them.");
+        peer->current_sending_byte = 0;
+        iov.iov_base = peer->sending_buffer;
+        iov.iov_len = peer->total_sending_buffer_size;
+        send_count = sendmsg(peer->socket, &msg, 0);
+        if (send_count < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                log_debug("peer is not ready right now, try again later.");
+            } else {
+                perror("sendmsg() from peer error");
+                return -1;
+            }
+        }    // we have read as many as possible
+        else if (send_count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            break;
+        } else if (send_count == 0) {
+            log_debug("send()'ed 0 bytes. It seems that peer can't accept data right now. Try again later.");
+            break;
+        } else if (send_count > 0) {
+            peer->current_sending_byte += send_count;
+            send_total += send_count;
+            log_debug("send()'ed %zd bytes.", send_count);
+        }
+        send_total += peer->total_sending_buffer_size;
+
+    }
 
     log_debug("Total send()'ed %zu bytes.", send_total);
     return 0;
