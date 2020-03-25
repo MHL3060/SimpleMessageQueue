@@ -10,8 +10,6 @@
 #include "message.h"
 #include "message_queue.h"
 
-typedef struct msghdr Msghdr;
-typedef struct iovec Iovec;
 
 void peer_delete(peer_t *peer);
 int peer_create(peer_t *peer);

@@ -32,6 +32,12 @@
 
 #define SENDER_MAXSIZE 128
 #define DATA_MAXSIZE 8192
+
+static const int HEADER_SIZE = sizeof(int32_t);
+
+static const unsigned char END_OF_MESSAGE_PAYLOAD[] = { 0xBA, 0xDB, 0xEE, 0xFB, 0xAD, 0xF0, 0x0D};
+static const int END_OF_MESSAGE_PAYLOAD_SIZE = sizeof(END_OF_MESSAGE_PAYLOAD);
+
 typedef struct {
     int type;
     char version;
@@ -64,6 +70,8 @@ typedef struct {
 
     /* The same for the receiving message. */
     unsigned char receiving_buffer[8192];
+    int32_t receiving_header;
+    unsigned char receiving_tail[END_OF_MESSAGE_PAYLOAD_SIZE];
     size_t current_receiving_byte;
     size_t total_received_buffer_size;
 } peer_t;
@@ -77,6 +85,4 @@ typedef struct {
 
 
 
-static const unsigned char END_OF_MESSAGE_PAYLOAD[] = { 0xBA, 0xDB, 0xEE, 0xFB, 0xAD, 0xF0, 0x0D};
-static const int END_OF_MESSAGE_PAYLOAD_SIZE = sizeof(END_OF_MESSAGE_PAYLOAD);
 #endif /* COMMON_H */

@@ -31,30 +31,10 @@
                 "  ]" \
                 "}"
 // message --------------------------------------------------------------------
-typedef void
-(*avro_free_func_t)(void *ptr, size_t sz);
-struct avro_bytes_datum_t {
-    struct avro_obj_t obj;
-    char *bytes;
-    int64_t size;
-    avro_free_func_t  free;
-};
-#define check_param(result, test, name)					\
-	{								\
-		if (!(test)) {						\
-			avro_set_error("Invalid " name " in %s",	\
-				       __FUNCTION__);			\
-			return result;					\
-		}							\
-	}
-#define container_of(ptr_, type_, member_)  \
-    ((type_ *)((char *)ptr_ - (size_t)&((type_ *)0)->member_))
-#define avro_datum_to_bytes(datum_)     (container_of(datum_, struct avro_bytes_datum_t, obj))
-// --above from garbage
-int prepare_message(char *header, char *data, message_t *message);
-int print_message(message_t *message);
-int validate_schema(avro_schema_t * message_schema);
+int32_t prepare_message(char *header, char *data, message_t *message);
+int32_t print_message(message_t *message);
+int32_t validate_schema(avro_schema_t * message_schema);
 
-int message_to_bytes(message_t * message, unsigned char * byte_array_result, int * byte_array_size);
-int message_bytes_to_message(unsigned char * avro_byte_stream, size_t bytesToRead, message_t * message);
+int32_t message_to_bytes(message_t * message, unsigned char * byte_array_result, int32_t * byte_array_size);
+int32_t message_bytes_to_message(unsigned char * avro_byte_stream, int32_t bytesToRead, message_t * message);
 #endif //SERVER_CLIENT_MESSAGE_H
