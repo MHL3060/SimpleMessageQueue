@@ -189,7 +189,7 @@ int handle_read_from_stdin() {
         return -1;
 
     // Create new message and enqueue it.
-    message_t new_message;
+    Message new_message;
     new_message.type = TYPE_DATA;
     prepare_message(SERVER_NAME, read_buffer, &new_message);
     print_message(&new_message);
@@ -209,7 +209,7 @@ int handle_read_from_stdin() {
     return 0;
 }
 
-int handle_received_message(message_t *message) {
+int handle_received_message(Message *message) {
     log_info("Received message from client.");
     print_message(message);
     return 0;

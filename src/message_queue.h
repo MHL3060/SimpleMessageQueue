@@ -10,22 +10,21 @@
 
 
 
-int message_create_queue(int queue_size, message_queue_t *queue);
+int message_create_queue(int queue_size, MessageQueue *queue);
 
-void delete_message_queue(message_queue_t *queue);
+void delete_message_queue(MessageQueue *queue);
 
-int message_enqueue(message_queue_t *queue, message_t *message);
+int message_enqueue(MessageQueue *queue, Message *message);
 /**
  * this method must run inside the pthread_mutex_lock or it cannot guarantee the position.
  * @param queue
  * @param message
  * @return
  */
-int message_peak(message_queue_t * queue, message_t *message);
-int message_dequeue_no_lock(message_queue_t *queue, message_t *message);
-int message_dequeue(message_queue_t *queue, message_t *message);
-int message_dequeue_to_byte_stream(message_queue_t *queue, unsigned char * avro_stream_bytes, int * byteSize);
-int message_dequeue_all(message_queue_t *queue);
+int message_peak(MessageQueue * queue, Message *message);
+int message_dequeue_no_lock(MessageQueue *queue, Message *message);
+int message_dequeue(MessageQueue *queue, Message *message);
+int message_dequeue_all(MessageQueue *queue);
 
 
 

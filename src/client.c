@@ -166,7 +166,7 @@ int handle_read_from_stdin(peer_t *server, char *client_name) {
     }
 
     // Create new message and enqueue it.
-    message_t new_message;
+    Message new_message;
     prepare_message(client_name, read_buffer, &new_message);
     print_message(&new_message);
 
@@ -187,7 +187,7 @@ void shutdown_properly(int code) {
     exit(code);
 }
 
-int handle_received_message(message_t *message) {
+int handle_received_message(Message *message) {
     log_debug("Received message from server.\n");
     print_message(message);
     return 0;

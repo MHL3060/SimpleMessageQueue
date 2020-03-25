@@ -45,31 +45,31 @@ typedef struct {
     unsigned char data[DATA_MAXSIZE];
     int data_size;
 
-} message_t;
+} Message;
 
 typedef struct {
     int size;
-    message_t *data;
+    Message *data;
     int current;
     pthread_mutex_t lock;
-} message_queue_t;
+} MessageQueue;
 
 typedef struct {
     int socket;
     struct sockaddr_in addres;
     /* Messages that waiting for send. */
-    message_queue_t send_buffer;
+    MessageQueue send_buffer;
 
     /* Buffered sending message.
      * In case we doesn't send whole message per one call send().
      * And current_sending_byte is a pointer to the part of data that will be send next call.
      */
-    unsigned char sending_buffer[8192];
+    unsigned char * sending_buffer[DATA_MAXSIZE];
     size_t total_sending_buffer_size;
     size_t current_sending_byte;
 
     /* The same for the receiving message. */
-    unsigned char receiving_buffer[8192];
+    unsigned char receiving_buffer[DATA_MAXSIZE];
     int32_t receiving_header;
     unsigned char receiving_tail[END_OF_MESSAGE_PAYLOAD_SIZE];
     size_t current_receiving_byte;

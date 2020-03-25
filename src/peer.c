@@ -8,14 +8,11 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <avro.h>
-#include <pthread.h>
 #include "common.h"
 #include "log.h"
 #include "message.h"
 #include "message_queue.h"
 #include "peer.h"
-#include "util.h"
 // peer -----------------------------------------------------------------------
 
 void peer_delete(peer_t *peer) {
@@ -41,17 +38,13 @@ char *peer_get_addres_str(peer_t *peer) {
     return ret;
 }
 
-int peer_add_to_send(peer_t *peer, message_t *message) {
+int peer_add_to_send(peer_t *peer, Message *message) {
     if (peer->socket != NO_SOCKET) {
-
         return message_enqueue(&peer->send_buffer, message);
     } else {
         return -1;
     }
-
 }
-
-
 
 /* Receive message from peer and handle it with message_handler(). */
 int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, unsigned char * payload) {
@@ -74,14 +67,13 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, unsigned char *
         if (received_count < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 log_debug("peer is not ready right now, try again later.");
+                return -1;
             } else {
                 perror("recv() from peer error");
                 return -1;
             }
-        } else if (received_count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-            break;
         }
-            // If recv() returns 0, it means that peer gracefully shutdown. Shutdown client.
+        // If recv() returns 0, it means that peer gracefully shutdown. Shutdown client.
         else if (received_count == 0) {
             log_debug("recv() 0 bytes. Peer gracefully shutdown.");
             return -1;
@@ -96,29 +88,13 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, unsigned char *
     return 0;
 }
 
-int skip_until_found_end_of_payload_signature(peer_t *peer) {
-    int position = 0;
-    while(position <= END_OF_MESSAGE_PAYLOAD_SIZE) {
-        unsigned char payload;
-        if (peer_receive_msg(peer, 1, &payload) != -1) {
-            if (payload == END_OF_MESSAGE_PAYLOAD[position]) {
-                position++;
-            } else {
-                position = 0;
-            }
-        }
-    }
-}
-
 /* Receive message from peer and handle it with message_handler(). */
-int peer_receive_from_peer(peer_t *peer, int (*message_handler)(message_t *)) {
+int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
     log_debug("Ready for recv() from %s.", peer_get_addres_str(peer));
 
-    int32_t  received_count;
     int32_t  received_total = 0;
     unsigned char payload[MAX_SEND_SIZE];
-    bool end_of_message = false;
-    message_t message;
+    Message message;
     int received_result;
     do {
 
@@ -161,15 +137,14 @@ int peer_send_to_peer(peer_t *peer) {
     int32_t  send_count;
     int32_t  send_total = 0;
     peer->total_sending_buffer_size = 0;
-    message_t current;
+    Message current;
     do {
         // If sending message has completely sent and there are messages in queue, why not send them?
 
         if (peer->current_sending_byte < 0 || peer->current_sending_byte >= peer->total_sending_buffer_size) {
 
-
             log_debug("There is no pending to send() message, maybe we can find one in queue... ");
-            memset(&current, '\0', sizeof(message_t));
+            memset(&current, '\0', sizeof(Message));
             if (message_dequeue(&peer->send_buffer, &current) != 0) {
                 peer->current_sending_byte = -1;
                 log_debug("No, there is nothing to send() anymore.");
@@ -194,10 +169,6 @@ int peer_send_to_peer(peer_t *peer) {
             } else {
                 return -1;
             }
-        }
-            // we have read as many as possible
-        else if (send_count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-            break;
         } else if (send_count == 0) {
             log_debug("send()'ed 0 bytes. It seems that peer can't accept data right now. Try again later.");
             break;
@@ -215,8 +186,8 @@ int peer_send_to_peer(peer_t *peer) {
 void peer_enqueue_heart_beat(peer_t * peer, char * name, bool shouldSend, int sleepTimeInMilliSeconds) {
     while(1) {
         if (peer->socket != NO_SOCKET) {
-            message_t message;
-            memset(&message, '\0', sizeof(message_t));
+            Message message;
+            memset(&message, '\0', sizeof(Message));
             char data[DATA_MAXSIZE];
             sprintf(data, "heartbeat from %s", name);
             prepare_message("header", data, &message);

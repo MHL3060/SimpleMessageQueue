@@ -31,10 +31,9 @@
                 "  ]" \
                 "}"
 // message --------------------------------------------------------------------
-int32_t prepare_message(char *header, char *data, message_t *message);
-int32_t print_message(message_t *message);
-int32_t validate_schema(avro_schema_t * message_schema);
+int32_t prepare_message(char *header, char *data, Message *message);
+int32_t print_message(Message *message);
 
-int32_t message_to_bytes(message_t * message, unsigned char * byte_array_result, int32_t * byte_array_size);
-int32_t message_bytes_to_message(unsigned char * avro_byte_stream, int32_t bytesToRead, message_t * message);
+int32_t message_to_bytes(Message * message, unsigned char * byte_array_result, int32_t * byte_array_size);
+int32_t message_bytes_to_message(unsigned char * avro_byte_stream, int32_t bytesToRead, Message * message);
 #endif //SERVER_CLIENT_MESSAGE_H

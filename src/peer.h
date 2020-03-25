@@ -15,10 +15,10 @@ void peer_delete(peer_t *peer);
 int peer_create(peer_t *peer);
 char *peer_get_addres_str(peer_t *peer);
 
-int peer_add_to_send(peer_t *peer, message_t *message);
+int peer_add_to_send(peer_t *peer, Message *message);
 
 /* Receive message from peer and handle it with message_handler(). */
-int peer_receive_from_peer(peer_t *peer, int (*message_handler)(message_t *));
+int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *));
 int peer_send_to_peer(peer_t *peer);
 void peer_enqueue_heart_beat(peer_t * peer, char * name, bool shouldSend, int sleepTimeInMilliSeconds);
 #endif //PEER_H

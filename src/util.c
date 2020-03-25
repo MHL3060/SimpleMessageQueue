@@ -42,27 +42,3 @@ int read_from_stdin(char *read_buffer, size_t max_len) {
 
     return 0;
 }
-
-bool is_array_equals(unsigned char * first, unsigned char * second, size_t size) {
-    bool equals = true;
-    for (int i = 0; i < size; i++) {
-        if (first[i] != second[i]) {
-            equals = false;
-            break;
-        }
-    }
-    return equals;
-}
-
-/*
-int copy_last_elements(unsigned char * array, size_t total_array_size, unsigned char * last_elements) {
-    size_t size = sizeof(&last_elements);
-
-    int elemnent_addr = last_elements;
-
-    for (int i = total_array_size - size; i < total_array_size; i++) {
-        &elemnent_addr = array[i];
-        elemnent_addr++;
-    }
-    return 0;
-}*/
