@@ -41,7 +41,7 @@ void handle_signal_action(int sig_number) {
         shutdown_properly(EXIT_SUCCESS);
     } else if (sig_number == SIGPIPE) {
         log_info("SIGPIPE was catched!");
-        shutdown_properly(EXIT_SUCCESS);
+         shutdown_properly(EXIT_SUCCESS);
     }
 }
 

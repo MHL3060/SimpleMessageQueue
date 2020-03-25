@@ -151,7 +151,7 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(message_t *)) {
     } while (received_result > 0);
 
     log_debug("Total recv()'ed %zu bytes.", received_total);
-    return 0;
+    return received_result;
 }
 
 int peer_send_to_peer(peer_t *peer) {
@@ -192,7 +192,6 @@ int peer_send_to_peer(peer_t *peer) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 log_debug("peer is not ready right now, try again later.");
             } else {
-                perror("send() from peer error");
                 return -1;
             }
         }

@@ -37,7 +37,7 @@ int32_t message_convert_message_to_avro_record(message_t * message, avro_datum_t
     avro_datum_t payload = avro_givebytes(message->data, message->data_size, NULL);
 
     //debug
-    char * buffer[8192];
+    char * buffer[DATA_MAXSIZE];
     int64_t size;
     avro_bytes_get(payload, buffer,  &size);
 
@@ -86,7 +86,7 @@ int32_t message_to_bytes(message_t * message, unsigned char * byteArrayResult, i
     validate_schema(&schema);
     avro_datum_t avroMessage = avro_record(schema);
     message_convert_message_to_avro_record(message, &avroMessage);
-    char payload_buffer[8192];
+    char payload_buffer[DATA_MAXSIZE];
 
     memset(payload_buffer, '\0', sizeof(payload_buffer));
     avro_writer_t  writer = avro_writer_memory(payload_buffer, sizeof(payload_buffer));
