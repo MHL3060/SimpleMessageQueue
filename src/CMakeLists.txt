@@ -25,6 +25,6 @@ add_library(common STATIC
 add_executable(server server.c server_main.c)
 add_executable(client client.c client_main.c)
 
-target_link_libraries(server jansson avro Threads::Threads common )
-target_link_libraries(client jansson avro Threads::Threads common )
+target_link_libraries(server  avro Threads::Threads common )
+target_link_libraries(client avro Threads::Threads common )
 message ("dest ${PROJECT_BINARY_DIR}")
