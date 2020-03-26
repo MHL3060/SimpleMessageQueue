@@ -60,7 +60,7 @@ static int32_t message_convert_datum_to_message(avro_datum_t * avro_message_reco
 
     avro_datum_t  type;
     avro_datum_t payload;
-    unsigned char * buffer[1];
+    unsigned char * buffer[DATA_MAXSIZE];
     if (avro_record_get(*avro_message_record, "type", &type) == 0) {
         avro_int32_get(type, &message->type);
         avro_datum_decref(type);
