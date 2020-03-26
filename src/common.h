@@ -71,7 +71,7 @@ typedef struct {
     /* The same for the receiving message. */
     unsigned char receiving_buffer[DATA_MAXSIZE];
     int32_t receiving_header;
-    unsigned char receiving_tail[END_OF_MESSAGE_PAYLOAD_SIZE];
+    unsigned char receiving_tail[7];
     size_t current_receiving_byte;
     size_t total_received_buffer_size;
 } peer_t;
