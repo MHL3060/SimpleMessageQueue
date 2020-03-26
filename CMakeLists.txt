@@ -44,7 +44,15 @@ if (NOT APACHE_AVRO_LIBRARIES)
             -DCMAKE_C_COMPILER:STRING=${CMAKE_C_COMPILER}
             -DCMAKE_SYSTEM_NAME:STRING=${CMAKE_SYSTEM_NAME}
     )
+    include_directories(
+	            ${APACHE_AVRO_INCLUDE_DIRS}
+		            ${JANSSON_INCLUDES_DIRS}
+			    )
+		    link_directories(
+			            ${JANSSON_LIBRARIES}
+				            ${APACHE_AVRO_LIBRARIES}
 
+					    )
     add_library (avro STATIC IMPORTED)
     set_property (TARGET avro PROPERTY IMPORTED_LOCATION "${AVRO_PREFIX}/lib/libavro.a")
     set(APACHE_AVRO_LIBRARIES ${AVRO_PREFIX}/lib)
