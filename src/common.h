@@ -36,7 +36,7 @@
 static const int HEADER_SIZE = sizeof(int32_t);
 
 static const unsigned char END_OF_MESSAGE_PAYLOAD[] = { 0xBA, 0xDB, 0xEE, 0xFB, 0xAD, 0xF0, 0x0D};
-static const int END_OF_MESSAGE_PAYLOAD_SIZE = sizeof(END_OF_MESSAGE_PAYLOAD);
+#define  END_OF_MESSAGE_PAYLOAD_SIZE 7 // = sizeof(END_OF_MESSAGE_PAYLOAD);
 
 typedef struct {
     int type;
