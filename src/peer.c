@@ -106,12 +106,12 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
         int32_t  payload_size = (int32_t )ntohl(peer->receiving_header);
 
         //receive the data payload
-        received_result = peer_receive_msg(peer, payload_size, &peer->receiving_buffer);
+        received_result = peer_receive_msg(peer, payload_size, peer->receiving_buffer);
         if (received_result == -1) {
             break;
         }
         //receive the tail to ensure we are in good condition.
-        received_result = peer_receive_msg(peer, END_OF_MESSAGE_PAYLOAD_SIZE, &peer->receiving_tail);
+        received_result = peer_receive_msg(peer, END_OF_MESSAGE_PAYLOAD_SIZE, peer->receiving_tail);
         if (received_result == -1) {
             break;
         }
@@ -162,7 +162,7 @@ int peer_send_to_peer(peer_t *peer) {
         }
 
         log_debug("Let's try to send() %zd bytes... ", len_to_send);
-        send_count = send(peer->socket, (unsigned char *) &peer->sending_buffer + peer->current_sending_byte, len_to_send, 0);
+        send_count = send(peer->socket, (unsigned char *) peer->sending_buffer + peer->current_sending_byte, len_to_send, 0);
         if (send_count < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 log_debug("peer is not ready right now, try again later.");
