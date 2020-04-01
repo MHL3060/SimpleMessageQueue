@@ -60,7 +60,7 @@ static int32_t message_convert_datum_to_message(avro_datum_t * avro_message_reco
 
     avro_datum_t  type;
     avro_datum_t payload;
-    unsigned char * buffer;
+    char buffer[8192];
     if (avro_record_get(*avro_message_record, "type", &type) == 0) {
         avro_int32_get(type, &message->type);
         avro_datum_decref(type);
@@ -72,7 +72,6 @@ static int32_t message_convert_datum_to_message(avro_datum_t * avro_message_reco
         int32_t size;
         if (avro_bytes_get(payload, &buffer, &size) == 0) {
             memcpy(message->data, buffer,size);
-            free(buffer);
         }
     } else {
         log_error("%s", avro_strerror());

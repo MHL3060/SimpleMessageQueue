@@ -64,7 +64,7 @@ typedef struct {
      * In case we doesn't send whole message per one call send().
      * And current_sending_byte is a pointer to the part of data that will be send next call.
      */
-    unsigned char * sending_buffer[DATA_MAXSIZE];
+    unsigned char sending_buffer[DATA_MAXSIZE];
     size_t total_sending_buffer_size;
     size_t current_sending_byte;
 
