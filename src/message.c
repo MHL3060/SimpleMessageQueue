@@ -33,7 +33,7 @@ int32_t validate_schema(avro_schema_t * message_schema) {
     return 0;
 }
 
-int32_t message_convert_message_to_avro_record(Message * message, avro_datum_t * datum) {
+int32_t message_convert_message_to_avro_record(Message * message, avro_datum_t * record) {
     avro_datum_t type = avro_int32(message->type);
     avro_datum_t payload = avro_givebytes(message->data, message->data_size, free);
 
@@ -44,9 +44,9 @@ int32_t message_convert_message_to_avro_record(Message * message, avro_datum_t *
     avro_schema_t schema = avro_schema_map(avro_schema_long());
     avro_datum_t header = avro_map(schema);
     avro_map_set(header, "header", "heartbeat");
-    if (avro_record_set(*datum, "type", type) ||
-        avro_record_set(*datum, "payload", payload) ||
-        avro_record_set(*datum, "header", header)) {
+    if (avro_record_set(*record, "type", type) ||
+        avro_record_set(*record, "payload", payload) ||
+        avro_record_set(*record, "header", header)) {
         log_error("%s", avro_strerror());
         return -1;
     } else {
@@ -80,6 +80,7 @@ int32_t message_convert_datum_to_message(avro_datum_t * avro_message_record, Mes
     }
     if(avro_record_get(*avro_message_record, "payload", &payload) == 0) {
         avro_datum_value_get_bytes(payload, message);
+        avro_datum_decref(payload);
     } else {
         log_error("%s", avro_strerror());
         return -1;
@@ -101,7 +102,7 @@ int32_t message_to_bytes(Message * message, unsigned char * byteArrayResult, int
         return -1;
     }
     int64_t size = avro_writer_tell(writer);
-    avro_writer_free(writer);
+
 
     int32_t networkOrderInt = htonl(size);
     memcpy(byteArrayResult, &networkOrderInt, HEADER_SIZE);
@@ -110,6 +111,7 @@ int32_t message_to_bytes(Message * message, unsigned char * byteArrayResult, int
 
     * byte_array_size = HEADER_SIZE + size + END_OF_MESSAGE_PAYLOAD_SIZE;
     avro_schema_decref(schema);
+    avro_writer_free(writer);
     return 0;
 }
 
