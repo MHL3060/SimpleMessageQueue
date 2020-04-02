@@ -24,8 +24,6 @@
 
 #define MAX_CLIENTS 10
 
-
-
 #define SERVER_NAME "server"
 
 int listen_sock;
@@ -137,9 +135,11 @@ int build_fd_sets(fd_set *read_fds, fd_set *write_fds, fd_set *except_fds) {
     FD_ZERO(except_fds);
     FD_SET(STDIN_FILENO, except_fds);
     FD_SET(listen_sock, except_fds);
-    for (i = 0; i < MAX_CLIENTS; ++i)
-        if (connection_list[i].socket != NO_SOCKET)
+    for (i = 0; i < MAX_CLIENTS; ++i) {
+        if (connection_list[i].socket != NO_SOCKET) {
             FD_SET(connection_list[i].socket, except_fds);
+        }
+    }
 
     return 0;
 }
