@@ -257,7 +257,5 @@ int client_init(Arguments * arguments, char *client_name) {
                     shutdown_properly(EXIT_FAILURE);
                 }
         }
-
-        log_debug("And we are still waiting for server or stdin activity. You can type something to send:\n");
     }
 }

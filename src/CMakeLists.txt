@@ -7,10 +7,12 @@ message("lib ${APACHE_AVRO_LIBRARIES}")
 include_directories(
         ${APACHE_AVRO_INCLUDE_DIRS}
         ${JANSSON_INCLUDES_DIRS}
+        ${AO_INCLUDE_DIRS}
 )
 link_directories(
         ${JANSSON_LIBRARIES}
         ${APACHE_AVRO_LIBRARIES}
+        ${AO_LIBRARY_DIRS}
 
 )
 
@@ -27,6 +29,6 @@ add_library(common STATIC
 add_executable(server server.c server_main.c)
 add_executable(client client.c client_main.c)
 
-target_link_libraries(server jansson avro Threads::Threads common )
-target_link_libraries(client jansson avro Threads::Threads common )
+target_link_libraries(server jansson avro ao Threads::Threads common )
+target_link_libraries(client jansson avro ao Threads::Threads common )
 message ("dest ${PROJECT_BINARY_DIR}")

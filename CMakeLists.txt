@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 
+include (CheckLibraryExists)
+include (CheckSymbolExists)
 include (ExternalProject)
 include (FindPkgConfig)
 
@@ -7,7 +9,14 @@ project(server_client C)
 project(server_message_queue C)
 
 find_library (APACHE_AVRO_LIBRARIES avro)
-
+if (USE_SYSTEM_LIBAO)
+    find_library (AO_LIBRARIES ao)
+    pkg_search_module(AO ao)
+    if (NOT AO_LIBRARIES)
+        message (WARNING " libao not found. Building from source.")
+        set (USE_SYSTEM_LIBAO OFF)
+    endif ()
+endif ()
 if (NOT APACHE_AVRO_LIBRARIES)
     set (AVRO_PREFIX "${CMAKE_BINARY_DIR}/avro-prefix")
     ExternalProject_Add (
@@ -56,6 +65,35 @@ if (NOT JANSSON)
     add_dependencies(jansson jansson_external)
 endif()
 
+if (NOT USE_SYSTEM_LIBAO)
+
+    set (LIBAO_PREFIX "${CMAKE_BINARY_DIR}/libao-prefix")
+    ExternalProject_Add (
+            libao_external
+            GIT_REPOSITORY "https://git.xiph.org/libao.git"
+            GIT_TAG d5221655dfd1a2156aa6be83b5aadea7c1e0f5bd
+            PREFIX ${LIBAO_PREFIX}
+
+            UPDATE_COMMAND ""
+            CONFIGURE_COMMAND ${LIBAO_PREFIX}/src/libao_external/configure ${HOST_TRIPLE_ARG} --prefix=${LIBAO_PREFIX} --enable-static --disable-shared --disable-pulse
+    )
+    ExternalProject_Add_Step (
+            libao_external
+            bootstrap
+            COMMAND sh ./autogen.sh
+            DEPENDEES patch
+            DEPENDERS configure
+            WORKING_DIRECTORY <SOURCE_DIR>
+    )
+
+    add_library (libao STATIC IMPORTED)
+    set_property (TARGET libao PROPERTY IMPORTED_LOCATION "${LIBAO_PREFIX}/lib/libao.a")
+    add_dependencies (libao libao_external)
+
+    set (AO_INCLUDE_DIRS "${LIBAO_PREFIX}/include")
+    set (AO_LIBRARIES libao ksuser winmm)
+    set (AO_BUILTIN libao)
+endif ()
 
 add_subdirectory (src)
 
