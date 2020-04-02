@@ -122,12 +122,14 @@ int build_fd_sets(fd_set *read_fds, fd_set *write_fds, fd_set *except_fds) {
 
     FD_ZERO(read_fds);
     FD_SET(STDIN_FILENO, read_fds);
+
     FD_SET(listen_sock, read_fds);
     for (i = 0; i < MAX_CLIENTS; ++i)
         if (connection_list[i].socket != NO_SOCKET)
             FD_SET(connection_list[i].socket, read_fds);
 
     FD_ZERO(write_fds);
+    FD_SET(STDOUT_FILENO, write_fds);
     for (i = 0; i < MAX_CLIENTS; ++i)
         if (connection_list[i].socket != NO_SOCKET && connection_list[i].send_buffer.current > 0)
             FD_SET(connection_list[i].socket, write_fds);
@@ -186,35 +188,27 @@ void close_client_connection(peer_t *client) {
 /* Reads from stdin and create new message. This message enqueues to send queueu. */
 int handle_read_from_stdin() {
     char read_buffer[DATA_MAXSIZE]; // buffer for stdin
-    if (read_from_stdin(read_buffer, DATA_MAXSIZE) != 0)
-        return -1;
+    while (read_from_stdin(read_buffer, DATA_MAXSIZE) > 0) {
+        // Create new message and enqueue it.
+        Message new_message;
+        new_message.type = TYPE_DATA;
+        prepare_message(SERVER_NAME, read_buffer, &new_message);
 
-    // Create new message and enqueue it.
-    Message new_message;
-    new_message.type = TYPE_DATA;
-    prepare_message(SERVER_NAME, read_buffer, &new_message);
-
-    /* enqueue message for all clients */
-    int i;
-    for (i = 0; i < MAX_CLIENTS; ++i) {
-        if (connection_list[i].socket != NO_SOCKET) {
-            if (peer_add_to_send(&connection_list[i], &new_message) != 0) {
-                log_info("Send buffer was overflowed, we lost this message!\n");
-                continue;
+        /* enqueue message for all clients */
+        int i;
+        for (i = 0; i < MAX_CLIENTS; ++i) {
+            if (connection_list[i].socket != NO_SOCKET) {
+                if (peer_add_to_send(&connection_list[i], &new_message) != 0) {
+                    log_info("Send buffer was overflowed, we lost this message!\n");
+                    continue;
+                }
+                log_info("New message to send was enqueued right now.\n");
             }
-            log_info("New message to send was enqueued right now.\n");
         }
     }
 
     return 0;
 }
-
-/*int handle_received_message(Message *message) {
-    log_info("Received message from client.");
-    print_message(message);
-    handle_message(message);
-    return 0;
-}*/
 
 int server_init(int *returnCode) {
     if (setup_signals() != 0)
@@ -308,7 +302,7 @@ int server_init(int *returnCode) {
 
         }
 
-        log_info("And we are still waiting for clients' or stdin activity. You can type something to send:\n");
+       // log_debug("And we are still waiting for clients' or stdin activity. You can type something to send:\n");
     }
 
     return 0;

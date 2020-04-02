@@ -7,15 +7,15 @@
 
 
 void wire_tap(const unsigned char *message) {
-    //log_info("Message: \"%s: %s\"", message->header, message->data);
+    log_info("Message: \"%s: %s\"", message);
     printf("%s", message);
 }
 
 
 int32_t handle_message(Message * message) {
-    if (message->type == TYPE_DATA) {
+    //if (message->type == TYPE_DATA) {
         wire_tap(message->data);
-    }
+    //}
 
     return 0;
 }

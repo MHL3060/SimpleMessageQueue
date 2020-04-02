@@ -149,6 +149,7 @@ int build_fd_sets(peer_t *server, fd_set *read_fds, fd_set *write_fds, fd_set *e
     FD_SET(server->socket, read_fds);
 
     FD_ZERO(write_fds);
+    FD_SET(STDOUT_FILENO, write_fds);
     // there is smth to send, set up write_fd for server socket
     if (server->send_buffer.current > 0)
         FD_SET(server->socket, write_fds);
@@ -162,21 +163,17 @@ int build_fd_sets(peer_t *server, fd_set *read_fds, fd_set *write_fds, fd_set *e
 
 int handle_read_from_stdin(peer_t *server, char *client_name) {
     char read_buffer[DATA_MAXSIZE]; // buffer for stdin
-    if (read_from_stdin(read_buffer, DATA_MAXSIZE) != 0) {
-        return -1;
+    while (read_from_stdin(read_buffer, DATA_MAXSIZE) > 0) {
+        Message new_message;
+        prepare_message(client_name, read_buffer, &new_message);
+        //print_message(&new_message);
+        new_message.type = TYPE_DATA;
+        if (peer_add_to_send(server, &new_message) != 0) {
+            log_debug("Send buffer is overflowed, we lost this message!\n");
+            return 0;
+        }
+        log_debug("New message to send was enqueued right now.\n");
     }
-
-    // Create new message and enqueue it.
-    Message new_message;
-    prepare_message(client_name, read_buffer, &new_message);
-    //print_message(&new_message);
-
-    if (peer_add_to_send(server, &new_message) != 0) {
-        log_debug("Send buffer is overflowed, we lost this message!\n");
-        return 0;
-    }
-    log_debug("New message to send was enqueued right now.\n");
-
     return 0;
 }
 
@@ -187,13 +184,6 @@ void shutdown_properly(int code) {
     log_debug("Shutdown client properly.\n");
     exit(code);
 }
-
-/*int handle_received_message(Message *message) {
-    log_debug("Received message from server.\n");
-    print_message(message);
-    handle_message(message);
-    return 0;
-}*/
 
 void init_heart_beat(char *client_name) {
     peer_enqueue_heart_beat(&server, client_name, true);
