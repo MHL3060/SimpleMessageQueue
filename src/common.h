@@ -32,19 +32,19 @@
 
 #define SENDER_MAXSIZE 128
 #define DATA_MAXSIZE 8192
+#define HEART_BEAT_TIME_IN_SEC 60
 
-static const int HEADER_SIZE = sizeof(int32_t);
 
-static const unsigned char END_OF_MESSAGE_PAYLOAD[] = { 0xBA, 0xDB, 0xEE, 0xFB, 0xAD, 0xF0, 0x0D};
 #define  END_OF_MESSAGE_PAYLOAD_SIZE 7 // = sizeof(END_OF_MESSAGE_PAYLOAD);
-
+//Message maps to Avro Message.
 typedef struct {
-    int type;
-    char version;
-    unsigned char header[SENDER_MAXSIZE];
-    unsigned char data[DATA_MAXSIZE];
-    int data_size;
-
+    unsigned char type; //                     1
+    unsigned char version; //                  1
+    int32_t data_size;     //                  4
+    unsigned char header[SENDER_MAXSIZE]; // 128
+    unsigned char data[DATA_MAXSIZE];     //8192
+                                        //------
+                                        //  8326
 } Message;
 
 typedef struct {
@@ -64,12 +64,12 @@ typedef struct {
      * In case we doesn't send whole message per one call send().
      * And current_sending_byte is a pointer to the part of data that will be send next call.
      */
-    unsigned char sending_buffer[DATA_MAXSIZE];
+    unsigned char sending_buffer[8326];  //same as the message size
     size_t total_sending_buffer_size;
     size_t current_sending_byte;
 
     /* The same for the receiving message. */
-    unsigned char receiving_buffer[DATA_MAXSIZE];
+    unsigned char receiving_buffer[8326]; //same as the message
     int32_t receiving_header;
     unsigned char receiving_tail[7];
     size_t current_receiving_byte;
@@ -84,5 +84,11 @@ typedef struct {
 } Arguments;
 
 
+// header is only for the size of the payload.
+static const int HEADER_SIZE = sizeof(int32_t);
+// end of the message magic number. maybe we should change this one to do the crc instead.
+static const unsigned char END_OF_MESSAGE_PAYLOAD[] = { 0xBA, 0xDB, 0xEE, 0xFB, 0xAD, 0xF0, 0x0D};
+
+static const int32_t  MESSAGE_SIZE = sizeof(Message);  //8326
 
 #endif /* COMMON_H */

@@ -54,13 +54,14 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, unsigned char *
     int32_t  received_total = 0;
     unsigned char buffer[MAX_SEND_SIZE];
     int32_t  len_to_receive;
+
     while (received_total < expect_payload_size) {
 
-        len_to_receive = expect_payload_size;
+        len_to_receive = expect_payload_size - received_total;
         if (len_to_receive > MAX_SEND_SIZE) {
             len_to_receive = MAX_SEND_SIZE;
         }
-        log_debug("Let's try to recv() %zd bytes... ", len_to_receive);
+        log_debug("Let's try to recv() %d bytes... ", len_to_receive);
         memset(buffer, '\0', sizeof(buffer));
         received_count = recv(peer->socket, buffer, len_to_receive, MSG_DONTWAIT);
 
@@ -81,10 +82,10 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, unsigned char *
 
             memcpy(payload + received_total, buffer, received_count);
             received_total += received_count;
-            log_debug("recv() %zd bytes", received_count);
+            log_debug("recv() %d bytes", received_count);
         }
     };
-    log_debug("Total recv()'ed %zu bytes.", received_total);
+    log_debug("Total recv()'ed %d bytes.", received_total);
     return 0;
 }
 
@@ -93,7 +94,6 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
     log_debug("Ready for recv() from %s.", peer_get_addres_str(peer));
 
     int32_t  received_total = 0;
-    unsigned char payload[MAX_SEND_SIZE];
     Message message;
     int received_result;
     do {
@@ -121,12 +121,11 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
             peer_delete(peer);
             break;
         }
-
         message_bytes_to_message(peer->receiving_buffer, payload_size, &message);
         message_handler(&message);
     } while (received_result > 0);
 
-    log_debug("Total recv()'ed %zu bytes.", received_total);
+    log_debug("Total recv()'ed %d bytes.", received_total);
     return received_result;
 }
 
@@ -140,7 +139,6 @@ int peer_send_to_peer(peer_t *peer) {
     Message current;
     do {
         // If sending message has completely sent and there are messages in queue, why not send them?
-
         if (peer->current_sending_byte < 0 || peer->current_sending_byte >= peer->total_sending_buffer_size) {
 
             log_debug("There is no pending to send() message, maybe we can find one in queue... ");
@@ -161,7 +159,7 @@ int peer_send_to_peer(peer_t *peer) {
             len_to_send = MAX_SEND_SIZE;
         }
 
-        log_debug("Let's try to send() %zd bytes... ", len_to_send);
+        log_debug("Let's try to send() %d bytes... ", len_to_send);
         send_count = send(peer->socket, (unsigned char *) peer->sending_buffer + peer->current_sending_byte, len_to_send, 0);
         if (send_count < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -175,15 +173,15 @@ int peer_send_to_peer(peer_t *peer) {
         } else if (send_count > 0) {
             peer->current_sending_byte += send_count;
             send_total += send_count;
-            log_debug("send()'ed %zd bytes.", send_count);
+            log_debug("send()'ed %d bytes.", send_count);
         }
     } while (send_count > 0);
 
-    log_debug("Total send()'ed %zu bytes.", send_total);
+    log_debug("Total send()'ed %d bytes.", send_total);
     return 0;
 }
 
-void peer_enqueue_heart_beat(peer_t * peer, char * name, bool shouldSend, int sleepTimeInMilliSeconds) {
+void peer_enqueue_heart_beat(peer_t * peer, char * name, bool shouldSend) {
     while(1) {
         if (peer->socket != NO_SOCKET) {
             Message message;
@@ -198,6 +196,6 @@ void peer_enqueue_heart_beat(peer_t * peer, char * name, bool shouldSend, int sl
                 peer_send_to_peer(peer);
             }
         }
-        usleep(sleepTimeInMilliSeconds * 1000);
+        sleep(HEART_BEAT_TIME_IN_SEC);
     }
 }

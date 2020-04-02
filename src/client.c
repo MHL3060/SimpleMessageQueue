@@ -194,7 +194,7 @@ int handle_received_message(Message *message) {
 }
 
 void init_heart_beat(char *client_name) {
-    peer_enqueue_heart_beat(&server, client_name, true, 3000);
+    peer_enqueue_heart_beat(&server, client_name, true);
 }
 
 int client_init(Arguments * arguments, char *client_name) {

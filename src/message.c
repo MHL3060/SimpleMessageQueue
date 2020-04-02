@@ -88,7 +88,7 @@ int32_t message_convert_datum_to_message(avro_datum_t * avro_message_record, Mes
     return 0;
 }
 
-int32_t message_to_bytes(Message * message, unsigned char * byteArrayResult, int32_t * byte_array_size) {
+int32_t message_to_bytes(Message * message, unsigned char * byteArrayResult, size_t * byte_array_size) {
     avro_schema_t schema;
     validate_schema(&schema);
     avro_datum_t avro_message = avro_record(schema);
