@@ -7,6 +7,7 @@
 #include <avro/io.h>
 #include <avro/schema.h>
 #include <avro.h>
+#include <avro/data.h>
 #include "common.h"
 #include "message.h"
 #include "log.h"
@@ -23,7 +24,7 @@ int32_t print_message(Message *message) {
     return 0;
 }
 
-static int32_t validate_schema(avro_schema_t * message_schema) {
+int32_t validate_schema(avro_schema_t * message_schema) {
 
     if (avro_schema_from_json_literal(SCHEMA, message_schema)) {
         log_error("unable to parse message schema");
@@ -32,7 +33,7 @@ static int32_t validate_schema(avro_schema_t * message_schema) {
     return 0;
 }
 
-static int32_t message_convert_message_to_avro_record(Message * message, avro_datum_t * datum) {
+int32_t message_convert_message_to_avro_record(Message * message, avro_datum_t * datum) {
     avro_datum_t type = avro_int32(message->type);
     avro_datum_t payload = avro_givebytes(message->data, message->data_size, free);
 
@@ -56,11 +57,20 @@ static int32_t message_convert_message_to_avro_record(Message * message, avro_da
     }
 }
 
-static int32_t message_convert_datum_to_message(avro_datum_t * avro_message_record, Message * message) {
+int avro_datum_value_get_bytes(const void *vself, Message * message)
+{
+    const avro_datum_t  self = (const avro_datum_t) vself;
+    char  *bytes;
+    int64_t  sz;
+    avro_bytes_get(self, &bytes, &sz);
+    memcpy(message->data, bytes, sz);
+    return 0;
+}
+
+int32_t message_convert_datum_to_message(avro_datum_t * avro_message_record, Message * message) {
 
     avro_datum_t  type;
     avro_datum_t payload;
-    char  * buffer[1];
     if (avro_record_get(*avro_message_record, "type", &type) == 0) {
         avro_int32_get(type, &message->type);
         avro_datum_decref(type);
@@ -69,11 +79,7 @@ static int32_t message_convert_datum_to_message(avro_datum_t * avro_message_reco
         return -1;
     }
     if(avro_record_get(*avro_message_record, "payload", &payload) == 0) {
-        int32_t size;
-
-        if (avro_bytes_get(payload, buffer, &size) == 0) {
-            memcpy(message->data, buffer[0], size);
-        }
+        avro_datum_value_get_bytes(payload, message);
     } else {
         log_error("%s", avro_strerror());
         return -1;
@@ -107,7 +113,7 @@ int32_t message_to_bytes(Message * message, unsigned char * byteArrayResult, int
     return 0;
 }
 
-int32_t message_bytes_to_message(unsigned char * avro_byte_stream, int32_t size_to_read, Message * message) {
+int32_t message_bytes_to_message(unsigned char avro_byte_stream[], int32_t size_to_read, Message * message) {
     avro_schema_t  schema;
     validate_schema(&schema);
     avro_datum_t avro_message = avro_record(schema);
