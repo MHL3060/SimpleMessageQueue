@@ -25,6 +25,7 @@
 #include "peer.h"
 #include "util.h"
 #include "client.h"
+#include "message_handler.h"
 
 peer_t server;
 pthread_t message_producer;
@@ -168,7 +169,7 @@ int handle_read_from_stdin(peer_t *server, char *client_name) {
     // Create new message and enqueue it.
     Message new_message;
     prepare_message(client_name, read_buffer, &new_message);
-    print_message(&new_message);
+    //print_message(&new_message);
 
     if (peer_add_to_send(server, &new_message) != 0) {
         log_debug("Send buffer is overflowed, we lost this message!\n");
@@ -187,11 +188,12 @@ void shutdown_properly(int code) {
     exit(code);
 }
 
-int handle_received_message(Message *message) {
+/*int handle_received_message(Message *message) {
     log_debug("Received message from server.\n");
     print_message(message);
+    handle_message(message);
     return 0;
-}
+}*/
 
 void init_heart_beat(char *client_name) {
     peer_enqueue_heart_beat(&server, client_name, true);
@@ -251,7 +253,7 @@ int client_init(Arguments * arguments, char *client_name) {
                 }
 
                 if (FD_ISSET(server.socket, &read_fds)) {
-                    if (peer_receive_from_peer(&server, &handle_received_message) != 0)
+                    if (peer_receive_from_peer(&server, &handle_message) != 0)
                         shutdown_properly(EXIT_FAILURE);
                 }
 

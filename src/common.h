@@ -34,6 +34,8 @@
 #define DATA_MAXSIZE 8192
 #define HEART_BEAT_TIME_IN_SEC 60
 
+#define  TYPE_HEART_BEAT 1
+#define  TYPE_DATA 2
 
 #define  END_OF_MESSAGE_PAYLOAD_SIZE 7 // = sizeof(END_OF_MESSAGE_PAYLOAD);
 //Message maps to Avro Message.

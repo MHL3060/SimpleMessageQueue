@@ -6,8 +6,7 @@
 #ifndef SERVER_CLIENT_MESSAGE_H
 #define SERVER_CLIENT_MESSAGE_H
 
-#define  TYPE_HEART_BEAT 1;
-#define  TYPE_DATA 2
+
 #define  TYPE_OK 3
 
 #include "common.h"
@@ -32,7 +31,6 @@
                 "}"
 // message --------------------------------------------------------------------
 int32_t prepare_message(char *header, char *data, Message *message);
-int32_t print_message(Message *message);
 
 int32_t message_to_bytes(Message * message, unsigned char * byte_array_result, size_t * byte_array_size);
 int32_t message_bytes_to_message(unsigned char * avro_byte_stream, int32_t bytesToRead, Message * message);

@@ -20,7 +20,9 @@ add_library(common STATIC
         util.c
         message.c
         message_queue.c
-        peer.c)
+        peer.c
+        message_handler.c
+)
 
 add_executable(server server.c server_main.c)
 add_executable(client client.c client_main.c)

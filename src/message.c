@@ -19,11 +19,6 @@ int32_t prepare_message(char *header, char *data, Message *message) {
     return 0;
 }
 
-int32_t print_message(Message *message) {
-    log_info("Message: \"%s: %s\"", message->header, message->data);
-    return 0;
-}
-
 int32_t validate_schema(avro_schema_t * message_schema) {
 
     if (avro_schema_from_json_literal(SCHEMA, message_schema)) {

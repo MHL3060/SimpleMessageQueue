@@ -20,6 +20,7 @@
 #include "log.h"
 #include "peer.h"
 #include "util.h"
+#include "message_handler.h"
 
 #define MAX_CLIENTS 10
 
@@ -192,7 +193,6 @@ int handle_read_from_stdin() {
     Message new_message;
     new_message.type = TYPE_DATA;
     prepare_message(SERVER_NAME, read_buffer, &new_message);
-    print_message(&new_message);
 
     /* enqueue message for all clients */
     int i;
@@ -209,11 +209,12 @@ int handle_read_from_stdin() {
     return 0;
 }
 
-int handle_received_message(Message *message) {
+/*int handle_received_message(Message *message) {
     log_info("Received message from client.");
     print_message(message);
+    handle_message(message);
     return 0;
-}
+}*/
 
 int server_init(int *returnCode) {
     if (setup_signals() != 0)
@@ -285,7 +286,7 @@ int server_init(int *returnCode) {
 
                 for (i = 0; i < MAX_CLIENTS; ++i) {
                     if (connection_list[i].socket != NO_SOCKET && FD_ISSET(connection_list[i].socket, &read_fds)) {
-                        if (peer_receive_from_peer(&connection_list[i], &handle_received_message) != 0) {
+                        if (peer_receive_from_peer(&connection_list[i], &handle_message) != 0) {
                             close_client_connection(&connection_list[i]);
                             continue;
                         }
