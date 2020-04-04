@@ -57,7 +57,7 @@ int setup_signals() {
     return 0;
 }
 
-int get_client_name(int argc, char **argv, char *client_name) {
+int get_client_name(int argc, char **argv, const char *client_name) {
     if (argc > 1)
         strcpy(client_name, argv[1]);
     else
@@ -161,13 +161,17 @@ int build_fd_sets(peer_t *server, fd_set *read_fds, fd_set *write_fds, fd_set *e
     return 0;
 }
 
-int handle_read_from_stdin(peer_t *server, char *client_name) {
+static int handle_read_from_stdin(peer_t *server, const char *client_name) {
     char read_buffer[DATA_MAXSIZE]; // buffer for stdin
-    while (read_from_stdin(read_buffer, DATA_MAXSIZE) > 0) {
+    int received_size = 0;
+    char header[256];
+    strncpy(header, client_name, strlen(client_name) + 1);
+    while (read_from_stdin(read_buffer, DATA_MAXSIZE, &received_size) > 0) {
         Message new_message;
-        prepare_message(client_name, read_buffer, &new_message);
+        prepare_message(header, read_buffer, received_size, &new_message);
         //print_message(&new_message);
-        new_message.type = TYPE_DATA;
+        new_message.type = TYPE_AUDIO;
+
         if (peer_add_to_send(server, &new_message) != 0) {
             log_debug("Send buffer is overflowed, we lost this message!\n");
             return 0;
@@ -186,7 +190,7 @@ void shutdown_properly(int code) {
 }
 
 void init_heart_beat(char *client_name) {
-    peer_enqueue_heart_beat(&server, client_name, true);
+    peer_enqueue_heart_beat(&server, client_name, false);
 }
 
 int client_init(Arguments * arguments, char *client_name) {
@@ -213,7 +217,9 @@ int client_init(Arguments * arguments, char *client_name) {
 
     // server socket always will be greater then STDIN_FILENO
     int maxfd = server.socket;
-    pthread_create(&message_producer, NULL, (void *)&init_heart_beat, client_name);
+    char copied_client_name[256];
+    strncpy(copied_client_name, client_name, strlen(client_name) + 1);
+  //  pthread_create(&message_producer, NULL, (void *)&init_heart_beat, copied_client_name);
     while (1) {
         // Select() updates fd_set's, so we need to build fd_set's before each select()call.
         build_fd_sets(&server, &read_fds, &write_fds, &except_fds);
@@ -223,7 +229,7 @@ int client_init(Arguments * arguments, char *client_name) {
         switch (activity) {
             case -1:
                 perror("select()");
-                shutdown_properly(EXIT_FAILURE);
+                 shutdown_properly(EXIT_FAILURE);
 
             case 0:
                 // you should never get here

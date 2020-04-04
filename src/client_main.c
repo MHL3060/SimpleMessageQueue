@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
     init_log(arguments.logLevel, "client");
 
     log_info("connect to host: %s, port : %d ", arguments.hostName, arguments.port);
-    char client_name[256];
+    const char client_name[256];
     get_client_name(argc, argv, client_name);
     client_init(&arguments, client_name);
     return 0;

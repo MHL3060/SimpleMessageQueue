@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include "log.h"
 /* Reads from stdin and create new message. This message enqueues to send queueu. */
-int read_from_stdin(char *read_buffer, size_t max_len) {
+int read_from_stdin(char *read_buffer, size_t max_len, size_t * received_size) {
     memset(read_buffer, 0, max_len);
 
     ssize_t read_count = 0;
@@ -33,6 +33,6 @@ int read_from_stdin(char *read_buffer, size_t max_len) {
         }
 
     log_info("Read from stdin %d bytes. Let's prepare message to send.", read_count);
-
+    * received_size = read_count;
     return read_count;
 }

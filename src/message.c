@@ -12,10 +12,10 @@
 #include "message.h"
 #include "log.h"
 
-int32_t prepare_message(char *header, char *data, Message *message) {
-    sprintf(message->header, "%s", header);
-    sprintf(message->data, "%s", data);
-    message->data_size = strlen(message->data) + 1;
+int32_t prepare_message(char *header, char *data, size_t size,  Message *message) {
+    memcpy(message->header, header, HEADER_SIZE);
+    memcpy(message->data, data, size);
+    message->data_size = size;
     return 0;
 }
 
@@ -88,12 +88,12 @@ int32_t message_to_bytes(Message * message, unsigned char * byteArrayResult, siz
     validate_schema(&schema);
     avro_datum_t avro_message = avro_record(schema);
     message_convert_message_to_avro_record(message, &avro_message);
-    char payload_buffer[DATA_MAXSIZE];
+    char payload_buffer[AVRO_PAYLOAD_SIZE];
 
     memset(payload_buffer, '\0', sizeof(payload_buffer));
     avro_writer_t  writer = avro_writer_memory(payload_buffer, sizeof(payload_buffer));
     if (avro_write_data(writer, NULL, avro_message) !=0) {
-        log_error("%s",avro_strerror());
+        log_error("error when converting to avro %s",avro_strerror());
         return -1;
     }
     int64_t size = avro_writer_tell(writer);

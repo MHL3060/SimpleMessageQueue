@@ -6,6 +6,6 @@
 #define SERVER_CLIENT_CLIENT_H
 
 #include "common.h"
-int get_client_name(int argc, char **argv, char * client_name);
+int get_client_name(int argc, char **argv, const char * client_name);
 int client_init(Arguments* arguments, char *client_name);
 #endif //SERVER_CLIENT_CLIENT_H

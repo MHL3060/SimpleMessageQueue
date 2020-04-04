@@ -30,7 +30,7 @@
                 "  ]" \
                 "}"
 // message --------------------------------------------------------------------
-int32_t prepare_message(char *header, char *data, Message *message);
+int32_t prepare_message(char *header, char *data, size_t data_size,  Message *message);
 
 int32_t message_to_bytes(Message * message, unsigned char * byte_array_result, size_t * byte_array_size);
 int32_t message_bytes_to_message(unsigned char * avro_byte_stream, int32_t bytesToRead, Message * message);

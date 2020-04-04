@@ -34,11 +34,16 @@
 #define DATA_MAXSIZE 8192
 #define HEART_BEAT_TIME_IN_SEC 60
 
-#define  TYPE_HEART_BEAT 1
-#define  TYPE_DATA 2
+#define TYPE_HEART_BEAT 1
+#define TYPE_DATA 2
+#define TYPE_AUDIO 3
 
 #define  END_OF_MESSAGE_PAYLOAD_SIZE 7 // = sizeof(END_OF_MESSAGE_PAYLOAD);
 //Message maps to Avro Message.
+
+
+#define AVRO_PAYLOAD_SIZE 12000
+
 typedef struct {
     unsigned char type; //                     1
     unsigned char version; //                  1
@@ -66,12 +71,12 @@ typedef struct {
      * In case we doesn't send whole message per one call send().
      * And current_sending_byte is a pointer to the part of data that will be send next call.
      */
-    unsigned char sending_buffer[8326];  //same as the message size
+    unsigned char sending_buffer[AVRO_PAYLOAD_SIZE];  //same as the message size
     size_t total_sending_buffer_size;
     size_t current_sending_byte;
 
     /* The same for the receiving message. */
-    unsigned char receiving_buffer[8326]; //same as the message
+    unsigned char receiving_buffer[AVRO_PAYLOAD_SIZE]; //same as the message
     int32_t receiving_header;
     unsigned char receiving_tail[7];
     size_t current_receiving_byte;

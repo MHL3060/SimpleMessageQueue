@@ -126,7 +126,7 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
     } while (received_result > 0);
 
     log_debug("Total recv()'ed %d bytes.", received_total);
-    return received_result;
+    return 0;
 }
 
 int peer_send_to_peer(peer_t *peer) {
@@ -159,7 +159,10 @@ int peer_send_to_peer(peer_t *peer) {
             len_to_send = MAX_SEND_SIZE;
         }
 
-        log_debug("Let's try to send() %d bytes... ", len_to_send);
+        log_debug("Let's try to send() %d bytes... from position %d: total bytes %d",
+                len_to_send,
+                peer->current_sending_byte,
+                peer->total_sending_buffer_size);
         send_count = send(peer->socket, (unsigned char *) peer->sending_buffer + peer->current_sending_byte, len_to_send, 0);
         if (send_count < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -175,20 +178,20 @@ int peer_send_to_peer(peer_t *peer) {
             send_total += send_count;
             log_debug("send()'ed %d bytes.", send_count);
         }
-    } while (send_count > 0);
+    } while (send_total < peer->total_sending_buffer_size);
 
     log_debug("Total send()'ed %d bytes.", send_total);
     return 0;
 }
 
-void peer_enqueue_heart_beat(peer_t * peer, char * name, bool shouldSend) {
+void peer_enqueue_heart_beat(peer_t * peer, const char * name, bool shouldSend) {
     while(1) {
         if (peer->socket != NO_SOCKET) {
             Message message;
             memset(&message, '\0', sizeof(Message));
             char data[DATA_MAXSIZE];
             sprintf(data, "heartbeat from %s", name);
-            prepare_message("header", data, &message);
+            prepare_message("header", data, strlen(data), &message);
             message.type = TYPE_HEART_BEAT;
             message.data_size = strlen(data) + 1;
             peer_add_to_send(peer, &message);

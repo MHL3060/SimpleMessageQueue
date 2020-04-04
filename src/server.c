@@ -59,6 +59,7 @@ int setup_signals() {
         return -1;
     }
     if (sigaction(SIGPIPE, &sa, 0) != 0) {
+        log_info("sigpipe catch");
         perror("sigaction()");
         return -1;
     }
@@ -188,11 +189,12 @@ void close_client_connection(peer_t *client) {
 /* Reads from stdin and create new message. This message enqueues to send queueu. */
 int handle_read_from_stdin() {
     char read_buffer[DATA_MAXSIZE]; // buffer for stdin
-    while (read_from_stdin(read_buffer, DATA_MAXSIZE) > 0) {
+    int received_sized = 0;
+    while (read_from_stdin(read_buffer, DATA_MAXSIZE, &received_sized) > 0) {
         // Create new message and enqueue it.
         Message new_message;
-        new_message.type = TYPE_DATA;
-        prepare_message(SERVER_NAME, read_buffer, &new_message);
+        new_message.type = TYPE_AUDIO;
+        prepare_message(SERVER_NAME, read_buffer, received_sized, &new_message);
 
         /* enqueue message for all clients */
         int i;
@@ -235,7 +237,7 @@ int server_init(int *returnCode) {
     int high_sock = listen_sock;
 
     log_info("Waiting for incoming connections.\n");
-     pthread_create(&message_producer, NULL, (void *)&send_heart_beat_messages, NULL);
+    // pthread_create(&message_producer, NULL, (void *)&send_heart_beat_messages, NULL);
     while (1) {
         build_fd_sets(&read_fds, &write_fds, &except_fds);
 
