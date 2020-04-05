@@ -48,7 +48,7 @@ int peer_add_to_send(peer_t *peer, Message *message) {
 }
 
 /* Receive message from peer and handle it with message_handler(). */
-int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, void * payload) {
+int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, bool wait, void * payload) {
     log_debug("Ready for recv() from %s.", peer_get_addres_str(peer));
 
     int32_t  received_count;
@@ -63,7 +63,7 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, void * payload)
         }
         log_debug("Let's try to recv() %d bytes... ", len_to_receive);
         memset(buffer, '\0', sizeof(buffer));
-        received_count = recv(peer->socket, buffer, len_to_receive, MSG_DONTWAIT);
+        received_count = recv(peer->socket, buffer, len_to_receive, wait? MSG_WAITALL : MSG_DONTWAIT);
 
         if (received_count < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -101,7 +101,7 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
         memset(&message, 0, sizeof(Message));
         //receive header to determine size
         header = 0;
-        received_result = peer_receive_msg(peer, HEADER_SIZE, (void*) &header);
+        received_result = peer_receive_msg(peer, HEADER_SIZE, true, (void*) &header);
         if (received_result == -1) {
             return -1;
         } else if (received_result == -2) {
@@ -110,7 +110,7 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
             int32_t  payload_size = (int32_t )ntohl(header);
             log_debug("payload size %u -> %u", header, payload_size);
             //receive the data payload
-            received_result = peer_receive_msg(peer, payload_size + END_OF_MESSAGE_PAYLOAD_SIZE, peer->receiving_buffer);
+            received_result = peer_receive_msg(peer, payload_size + END_OF_MESSAGE_PAYLOAD_SIZE, false, peer->receiving_buffer);
             if (received_result == -1) {
                 return -1;
             }else if (received_result == -2) {
