@@ -4,6 +4,7 @@
 #include "log.h"
 #include "server.h"
 #include "message.h"
+#include "libevent_server.h"
 int main() {
     Arguments arguments;
     init_log(LOG_DEBUG, "server");

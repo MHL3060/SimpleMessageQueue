@@ -1,0 +1,8 @@
+//
+// Created by Ben Li on 2020-04-04.
+//
+
+#ifndef SERVER_MESSAGE_QUEUE_LIBEVENT_SERVER_H
+#define SERVER_MESSAGE_QUEUE_LIBEVENT_SERVER_H
+int server_init_event();
+#endif //SERVER_MESSAGE_QUEUE_LIBEVENT_SERVER_H

@@ -149,7 +149,6 @@ int build_fd_sets(peer_t *server, fd_set *read_fds, fd_set *write_fds, fd_set *e
     FD_SET(server->socket, read_fds);
 
     FD_ZERO(write_fds);
-    FD_SET(STDOUT_FILENO, write_fds);
     // there is smth to send, set up write_fd for server socket
     if (server->send_buffer.current > 0)
         FD_SET(server->socket, write_fds);
@@ -217,8 +216,6 @@ int client_init(Arguments * arguments, char *client_name) {
 
     // server socket always will be greater then STDIN_FILENO
     int maxfd = server.socket;
-    char copied_client_name[256];
-    strncpy(copied_client_name, client_name, strlen(client_name) + 1);
   //  pthread_create(&message_producer, NULL, (void *)&init_heart_beat, copied_client_name);
     while (1) {
         // Select() updates fd_set's, so we need to build fd_set's before each select()call.

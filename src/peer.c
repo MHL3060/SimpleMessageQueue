@@ -101,25 +101,25 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
         //receive header to determine size
         received_result = peer_receive_msg(peer, HEADER_SIZE, &peer->receiving_header);
         if (received_result == -1) {
-            break;
+            return -1;
         }
         int32_t  payload_size = (int32_t )ntohl(peer->receiving_header);
 
         //receive the data payload
         received_result = peer_receive_msg(peer, payload_size, peer->receiving_buffer);
         if (received_result == -1) {
-            break;
+            return -1;
         }
         //receive the tail to ensure we are in good condition.
         received_result = peer_receive_msg(peer, END_OF_MESSAGE_PAYLOAD_SIZE, peer->receiving_tail);
         if (received_result == -1) {
-            break;
+            return -1;
         }
         if (memcmp(peer->receiving_tail, END_OF_MESSAGE_PAYLOAD, END_OF_MESSAGE_PAYLOAD_SIZE) != 0) {
             log_error("message is misaligned, go find the end of the payload signature");
 
             peer_delete(peer);
-            break;
+            return -1;
         }
         message_bytes_to_message(peer->receiving_buffer, payload_size, &message);
         message_handler(&message);

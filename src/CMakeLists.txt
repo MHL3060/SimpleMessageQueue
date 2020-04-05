@@ -24,6 +24,8 @@ add_library(common STATIC
         message_queue.c
         peer.c
         message_handler.c
+      #  net_util.c
+      #  libevent_server.c
 )
 
 add_executable(server server.c server_main.c)

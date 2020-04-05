@@ -15,6 +15,8 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <event2/event.h>
+#include <termios.h>
 
 #include "common.h"
 #include "log.h"
@@ -29,7 +31,7 @@
 int listen_sock;
 peer_t connection_list[MAX_CLIENTS];
 char read_buffer[1024]; // buffer for stdin
-
+struct termios old, current;
 pthread_t message_producer;
 
 void shutdown_properly(int code);
@@ -38,10 +40,11 @@ void handle_signal_action(int sig_number) {
     if (sig_number == SIGINT) {
         log_info("SIGINT was catched!");
         shutdown_properly(EXIT_SUCCESS);
-    } else if (sig_number == SIGPIPE) {
+    }
+   /* else if (sig_number == SIGPIPE) {
         log_info("SIGPIPE was catched!");
          shutdown_properly(EXIT_SUCCESS);
-    }
+    }*/
 }
 
 void send_heart_beat_messages() {
@@ -58,11 +61,11 @@ int setup_signals() {
         perror("sigaction()");
         return -1;
     }
-    if (sigaction(SIGPIPE, &sa, 0) != 0) {
+    /*if (sigaction(SIGPIPE, &sa, 0) != 0) {
         log_info("sigpipe catch");
         perror("sigaction()");
         return -1;
-    }
+    }*/
 
     return 0;
 }
@@ -113,6 +116,7 @@ void shutdown_properly(int code) {
             close(connection_list[i].socket);
 
     log_info("Shutdown server properly.\n");
+    resetTermios(&old);
     exit(code);
 }
 
@@ -128,7 +132,7 @@ int build_fd_sets(fd_set *read_fds, fd_set *write_fds, fd_set *except_fds) {
             FD_SET(connection_list[i].socket, read_fds);
 
     FD_ZERO(write_fds);
-    FD_SET(STDOUT_FILENO, write_fds);
+
     for (i = 0; i < MAX_CLIENTS; ++i)
         if (connection_list[i].socket != NO_SOCKET && connection_list[i].send_buffer.current > 0)
             FD_SET(connection_list[i].socket, write_fds);
@@ -190,7 +194,7 @@ void close_client_connection(peer_t *client) {
 int handle_read_from_stdin() {
     char read_buffer[DATA_MAXSIZE]; // buffer for stdin
     int received_sized = 0;
-    while (read_from_stdin(read_buffer, DATA_MAXSIZE, &received_sized) > 0) {
+    while (read_from_stdin(read_buffer, MAX_SEND_SIZE, &received_sized) > 0) {
         // Create new message and enqueue it.
         Message new_message;
         new_message.type = TYPE_AUDIO;
@@ -213,6 +217,7 @@ int handle_read_from_stdin() {
 }
 
 int server_init(int *returnCode) {
+    initTermios(&old, &current);
     if (setup_signals() != 0)
         return EXIT_FAILURE;
 
@@ -246,8 +251,10 @@ int server_init(int *returnCode) {
             if (connection_list[i].socket > high_sock)
                 high_sock = connection_list[i].socket;
         }
-
-        int activity = select(high_sock + 1, &read_fds, &write_fds, &except_fds, NULL);
+        struct timeval timeval;
+        timeval.tv_sec = 10000000;
+        timeval.tv_usec = 0;
+        int activity = select(high_sock + 1, &read_fds, &write_fds, &except_fds, &timeval);
 
         switch (activity) {
             case -1:

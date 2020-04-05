@@ -59,6 +59,7 @@ int avro_datum_value_get_bytes(const void *vself, Message * message)
     int64_t  sz;
     avro_bytes_get(self, &bytes, &sz);
     memcpy(message->data, bytes, sz);
+    message->data_size = sz;
     return 0;
 }
 

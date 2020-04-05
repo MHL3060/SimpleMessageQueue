@@ -6,6 +6,10 @@
 #ifndef SERVER_CLIENT_UTIL_H
 #define SERVER_CLIENT_UTIL_H
 int read_from_stdin(char *read_buffer, size_t max_len, size_t * received_size);
-int is_array_equals(unsigned char * first, unsigned char * second, size_t size);
+void init_sockaddr(int port, struct sockaddr_in * sockaddr);
+        int is_array_equals(unsigned char * first, unsigned char * second, size_t size);
 int copy_last_elements(unsigned char * array, size_t total_array_size, unsigned char * last_elements);
+
+void initTermios(struct termios * old, struct termios * current);
+void resetTermios(struct termios * old);
 #endif //SERVER_CLIENT_UTIL_H

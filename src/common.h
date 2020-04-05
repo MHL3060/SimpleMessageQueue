@@ -25,13 +25,13 @@
 
 #define NO_SOCKET -1
 
-#define MAX_SEND_SIZE 1024
+#define MAX_SEND_SIZE 200000 //this value must less than DATA_MAXSIZE
 
 /* Size of send queue (messages). */
-#define MAX_MESSAGES_BUFFER_SIZE 100
+#define MAX_MESSAGES_BUFFER_SIZE 1000
 
 #define SENDER_MAXSIZE 128
-#define DATA_MAXSIZE 8192
+#define DATA_MAXSIZE 240000  //this value must less than AVRO_PAYLOAD_SIZE
 #define HEART_BEAT_TIME_IN_SEC 60
 
 #define TYPE_HEART_BEAT 1
@@ -42,7 +42,7 @@
 //Message maps to Avro Message.
 
 
-#define AVRO_PAYLOAD_SIZE 12000
+#define AVRO_PAYLOAD_SIZE 256000
 
 typedef struct {
     unsigned char type; //                     1

@@ -6,15 +6,13 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <avro.h>
+#include <sys/queue.h>
 
 #include "common.h"
 #include "message_queue.h"
 #include "peer.h"
 
 
-void transform(char * msg) {
-
-}
 int message_create_queue(int queue_size, MessageQueue *queue) {
     queue->data = calloc(queue_size, sizeof(Message));
     queue->size = queue_size;
@@ -79,3 +77,7 @@ int message_dequeue_all(MessageQueue *queue) {
     queue->current = 0;
     return 0;
 }
+
+
+
+
