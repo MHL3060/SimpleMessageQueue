@@ -25,7 +25,7 @@
 
 #define NO_SOCKET -1
 
-#define MAX_SEND_SIZE 100000 //this value must less than DATA_MAXSIZE
+#define MAX_SEND_SIZE 20000 //this value must less than DATA_MAXSIZE
 
 /* Size of send queue (messages). */
 #define MAX_MESSAGES_BUFFER_SIZE 1000

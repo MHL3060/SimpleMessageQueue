@@ -48,15 +48,16 @@ int peer_add_to_send(peer_t *peer, Message *message) {
 }
 
 /* Receive message from peer and handle it with message_handler(). */
-int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, bool wait, void * payload) {
+int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size,  void * payload) {
     log_debug("Ready for recv() from %s.", peer_get_addres_str(peer));
 
     int32_t  received_count;
     int32_t  received_total = 0;
     unsigned char buffer[MAX_SEND_SIZE];
     int32_t  len_to_receive;
-    while (received_total < expect_payload_size) {
-
+    bool shouldWait = false;
+    while (shouldWait || received_total < expect_payload_size) {
+        shouldWait = false;
         len_to_receive = expect_payload_size - received_total;
         if (len_to_receive > MAX_SEND_SIZE) {
             len_to_receive = MAX_SEND_SIZE;
@@ -68,7 +69,8 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, bool wait, void
         if (received_count < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 log_debug("peer is not ready right now, try again later. %d", received_count);
-                return -2;
+                //we need to wait;
+                shouldWait = true;
             } else {
                 perror("recv() from peer error");
                 return -1;
