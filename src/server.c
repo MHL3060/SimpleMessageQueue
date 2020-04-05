@@ -13,9 +13,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <pthread.h>
 #include <stdbool.h>
-#include <event2/event.h>
 #include <termios.h>
 
 #include "common.h"
