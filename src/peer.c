@@ -97,8 +97,9 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
     Message message;
     int received_result;
     do {
-
+        memset(&message, 0, sizeof(Message));
         //receive header to determine size
+        peer->receiving_header = 0;
         received_result = peer_receive_msg(peer, HEADER_SIZE, &peer->receiving_header);
         if (received_result == -1) {
             return -1;
@@ -106,7 +107,7 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
             break;
         } else {
             int32_t  payload_size = (int32_t )ntohl(peer->receiving_header);
-            log_debug("payload size %d", payload_size);
+            log_debug("payload size %d -> %d", peer->receiving_header, payload_size);
             //receive the data payload
             received_result = peer_receive_msg(peer, payload_size, peer->receiving_buffer);
             if (received_result == -1) {
