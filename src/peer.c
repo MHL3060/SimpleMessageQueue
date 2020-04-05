@@ -96,18 +96,19 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
     int32_t  received_total = 0;
     Message message;
     int received_result;
+    int header = 0;
     do {
         memset(&message, 0, sizeof(Message));
         //receive header to determine size
-        peer->receiving_header = 0;
-        received_result = peer_receive_msg(peer, HEADER_SIZE, &peer->receiving_header);
+        header = 0;
+        received_result = peer_receive_msg(peer, HEADER_SIZE, &header);
         if (received_result == -1) {
             return -1;
         } else if (received_result == -2) {
             break;
         } else {
-            int32_t  payload_size = (int32_t )ntohl(peer->receiving_header);
-            log_debug("payload size %d -> %d", peer->receiving_header, payload_size);
+            int32_t  payload_size = (int32_t )ntohl(header);
+            log_debug("payload size %d -> %d", header, payload_size);
             //receive the data payload
             received_result = peer_receive_msg(peer, payload_size, peer->receiving_buffer);
             if (received_result == -1) {
