@@ -72,15 +72,15 @@ typedef struct {
      * And current_sending_byte is a pointer to the part of data that will be send next call.
      */
     unsigned char sending_buffer[AVRO_PAYLOAD_SIZE];  //same as the message size
-    size_t total_sending_buffer_size;
-    size_t current_sending_byte;
+    int32_t total_sending_buffer_size;
+    int32_t current_sending_byte;
 
     /* The same for the receiving message. */
     unsigned char receiving_buffer[AVRO_PAYLOAD_SIZE]; //same as the message
   //  int32_t receiving_header;
     unsigned char receiving_tail[7];
-    size_t current_receiving_byte;
-    size_t total_received_buffer_size;
+    int32_t current_receiving_byte;
+    int32_t total_received_buffer_size;
 } peer_t;
 
 typedef struct {

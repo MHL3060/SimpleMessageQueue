@@ -48,7 +48,7 @@ int peer_add_to_send(peer_t *peer, Message *message) {
 }
 
 /* Receive message from peer and handle it with message_handler(). */
-int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, unsigned char * payload) {
+int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, void * payload) {
     log_debug("Ready for recv() from %s.", peer_get_addres_str(peer));
 
     int32_t  received_count;
@@ -101,7 +101,7 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
         memset(&message, 0, sizeof(Message));
         //receive header to determine size
         header = 0;
-        received_result = peer_receive_msg(peer, HEADER_SIZE, &header);
+        received_result = peer_receive_msg(peer, HEADER_SIZE, (void*) &header);
         if (received_result == -1) {
             return -1;
         } else if (received_result == -2) {
