@@ -101,7 +101,7 @@ int32_t message_to_bytes(Message * message, unsigned char * byteArrayResult, siz
 
 
     int32_t networkOrderInt = htonl(size);
-    log_info("networkOrder %d = %u", size, networkOrderInt)
+    log_info("networkOrder %d = %u", size, networkOrderInt);
     memcpy(byteArrayResult, &networkOrderInt, HEADER_SIZE);
     memcpy(byteArrayResult + HEADER_SIZE, payload_buffer, size);
     memcpy(byteArrayResult + HEADER_SIZE + size, END_OF_MESSAGE_PAYLOAD, END_OF_MESSAGE_PAYLOAD_SIZE);

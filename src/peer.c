@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 #include "common.h"
 #include "log.h"
 #include "message.h"
@@ -54,7 +55,6 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, unsigned char *
     int32_t  received_total = 0;
     unsigned char buffer[MAX_SEND_SIZE];
     int32_t  len_to_receive;
-
     while (received_total < expect_payload_size) {
 
         len_to_receive = expect_payload_size - received_total;
@@ -108,26 +108,18 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
             break;
         } else {
             int32_t  payload_size = (int32_t )ntohl(header);
-            log_debug("payload size %d -> %d", header, payload_size);
+            log_debug("payload size %u -> %u", header, payload_size);
             //receive the data payload
-            received_result = peer_receive_msg(peer, payload_size, peer->receiving_buffer);
+            received_result = peer_receive_msg(peer, payload_size + END_OF_MESSAGE_PAYLOAD_SIZE, peer->receiving_buffer);
             if (received_result == -1) {
                 return -1;
             }else if (received_result == -2) {
                 break;
             }else {
-                //receive the tail to ensure we are in good condition.
-                received_result = peer_receive_msg(peer, END_OF_MESSAGE_PAYLOAD_SIZE, peer->receiving_tail);
-                if (received_result == -1) {
+                if (memcmp(peer->receiving_buffer + payload_size, END_OF_MESSAGE_PAYLOAD, END_OF_MESSAGE_PAYLOAD_SIZE) != 0) {
+                    log_error("message is misaligned, go find the end of the payload signature");
+                    peer_delete(peer);
                     return -1;
-                } else if (received_result == -2) {
-                    break;
-                } else {
-                    if (memcmp(peer->receiving_tail, END_OF_MESSAGE_PAYLOAD, END_OF_MESSAGE_PAYLOAD_SIZE) != 0) {
-                        log_error("message is misaligned, go find the end of the payload signature");
-                        peer_delete(peer);
-                        return -1;
-                    }
                 }
             }
             message_bytes_to_message(peer->receiving_buffer, payload_size, &message);
