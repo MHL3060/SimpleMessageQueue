@@ -150,7 +150,7 @@ int build_fd_sets(peer_t *server, fd_set *read_fds, fd_set *write_fds, fd_set *e
 
     FD_ZERO(write_fds);
     // there is smth to send, set up write_fd for server socket
-    if (server->send_buffer.current > 0)
+    if (server->send_buffer.front >= 0)
         FD_SET(server->socket, write_fds);
 
     FD_ZERO(except_fds);

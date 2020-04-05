@@ -57,8 +57,8 @@ typedef struct {
 typedef struct {
     int size;
     Message *data;
-    int current;
     pthread_mutex_t lock;
+    int front, rear;
 } MessageQueue;
 
 typedef struct {
@@ -90,12 +90,13 @@ typedef struct {
     int logLevel;
 } Arguments;
 
-
 // header is only for the size of the payload.
 static const int HEADER_SIZE = sizeof(int32_t);
 // end of the message magic number. maybe we should change this one to do the crc instead.
 static const unsigned char END_OF_MESSAGE_PAYLOAD[] = { 0xBA, 0xDB, 0xEE, 0xFB, 0xAD, 0xF0, 0x0D};
 
 static const int32_t  MESSAGE_SIZE = sizeof(Message);  //8326
+
+
 
 #endif /* COMMON_H */

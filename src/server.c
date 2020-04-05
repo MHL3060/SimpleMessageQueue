@@ -134,7 +134,7 @@ int build_fd_sets(fd_set *read_fds, fd_set *write_fds, fd_set *except_fds) {
     FD_ZERO(write_fds);
 
     for (i = 0; i < MAX_CLIENTS; ++i)
-        if (connection_list[i].socket != NO_SOCKET && connection_list[i].send_buffer.current > 0)
+        if (connection_list[i].socket != NO_SOCKET && connection_list[i].send_buffer.front >= 0)
             FD_SET(connection_list[i].socket, write_fds);
 
     FD_ZERO(except_fds);

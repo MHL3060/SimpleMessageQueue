@@ -16,7 +16,8 @@
 int message_create_queue(int queue_size, MessageQueue *queue) {
     queue->data = calloc(queue_size, sizeof(Message));
     queue->size = queue_size;
-    queue->current = 0;
+    queue->front = -1;
+    queue->rear = -1;
     pthread_mutex_init(&queue->lock, NULL);
     return 0;
 }
@@ -29,13 +30,20 @@ void delete_message_queue(MessageQueue *queue) {
 int message_enqueue(MessageQueue *queue, Message *message) {
     int result = 0;
     pthread_mutex_lock(&queue->lock);
-    if (queue->current == queue->size) {
-        result = -1;
-    } else {
-        memcpy(&queue->data[queue->current], message, sizeof(Message));
-        queue->current++;
-        result = 0;
+    if ((queue->front == 0 && queue->rear == queue->size -1) || (queue->front == queue->rear + 1)) {
+        return -1;
     }
+    if (queue->front == -1) {
+        queue->front = 0;
+        queue->rear = 0;
+    } else {
+        if (queue->rear == queue->size -1) {
+            queue->rear = 0;
+        }else {
+            queue->rear++;
+        }
+    }
+    memcpy(&queue->data[queue->rear], message, sizeof(Message));
     pthread_mutex_unlock(&queue->lock);
     return result;
 }
@@ -46,10 +54,10 @@ int message_enqueue(MessageQueue *queue, Message *message) {
  * @return
  */
 int message_peak(MessageQueue * queue, Message *message) {
-    if (queue->current == 0) {
+    if (queue->front == queue->rear) {
         return -1;
     } else {
-        memcpy(message, &queue->data[queue->current - 1], sizeof(Message));
+        memcpy(message, &queue->data[queue->front], sizeof(Message));
         return 0;
     }
 }
@@ -64,19 +72,31 @@ int message_dequeue(MessageQueue *queue, Message *message) {
 int message_dequeue_no_lock(MessageQueue *queue, Message *message) {
     int result = 0;
 
-    if (queue->current == 0) {
-        result = -1;
-    } else {
-        memcpy(message, &queue->data[queue->current - 1], sizeof(Message));
-        queue->current--;
+    if (queue->front == -1) {
+        return -1;
     }
-    return result;
+    memcpy(message, &queue->data[queue->front], sizeof(Message));
+    if (queue->front == queue->rear) {
+        queue->front = -1;
+        queue->rear = -1;
+    } else {
+        if (queue->front == queue->size -1) {
+            queue->front = 0;
+        } else {
+            queue->front++;
+        }
+    }
+    return 0;
 }
 
 int message_dequeue_all(MessageQueue *queue) {
-    queue->current = 0;
+    queue->front = -1;
+    queue->rear = -1;
+
     return 0;
 }
+
+
 
 
 
