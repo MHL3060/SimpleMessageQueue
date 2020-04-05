@@ -49,19 +49,17 @@ void init_sockaddr(int port, struct sockaddr_in * sockaddr) {
 
 void initTermios(struct termios * old, struct termios * current)
 {
-    tcgetattr(0, &old); /* grab old terminal i/o settings */
+    tcgetattr(STDIN_FILENO, &old); /* grab old terminal i/o settings */
     current = old; /* make new settings same as old settings */
     current->c_lflag &= ~ICANON; /* disable buffered i/o */
-   // if (echo) {
-        current->c_lflag |= ECHO; /* set echo mode */
-   // } else {
-     //   current->c_lflag &= ~ECHO; /* set no echo mode */
-   // }
-    tcsetattr(0, TCSANOW, &current); /* use these new terminal i/o settings now */
+
+    current->c_lflag |= ECHO; /* set echo mode */
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &current); /* use these new terminal i/o settings now */
 }
 
 /* Restore old terminal i/o settings */
 void resetTermios(struct termios * old)
 {
-    tcsetattr(0, TCSANOW, old);
+    tcsetattr(STDIN_FILENO, TCSANOW, old);
 }
