@@ -67,8 +67,8 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, unsigned char *
 
         if (received_count < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                log_debug("peer is not ready right now, try again later.");
-                return -1;
+                log_debug("peer is not ready right now, try again later. %d", received_count);
+                return -2;
             } else {
                 perror("recv() from peer error");
                 return -1;
@@ -102,27 +102,35 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
         received_result = peer_receive_msg(peer, HEADER_SIZE, &peer->receiving_header);
         if (received_result == -1) {
             return -1;
+        } else if (received_result == -2) {
+            break;
+        } else {
+            int32_t  payload_size = (int32_t )ntohl(peer->receiving_header);
+            log_debug("payload size %d", payload_size);
+            //receive the data payload
+            received_result = peer_receive_msg(peer, payload_size, peer->receiving_buffer);
+            if (received_result == -1) {
+                return -1;
+            }else if (received_result == -2) {
+                break;
+            }else {
+                //receive the tail to ensure we are in good condition.
+                received_result = peer_receive_msg(peer, END_OF_MESSAGE_PAYLOAD_SIZE, peer->receiving_tail);
+                if (received_result == -1) {
+                    return -1;
+                } else if (received_result == -2) {
+                    break;
+                } else {
+                    if (memcmp(peer->receiving_tail, END_OF_MESSAGE_PAYLOAD, END_OF_MESSAGE_PAYLOAD_SIZE) != 0) {
+                        log_error("message is misaligned, go find the end of the payload signature");
+                        peer_delete(peer);
+                        return -1;
+                    }
+                }
+            }
+            message_bytes_to_message(peer->receiving_buffer, payload_size, &message);
+            message_handler(&message);
         }
-        int32_t  payload_size = (int32_t )ntohl(peer->receiving_header);
-
-        //receive the data payload
-        received_result = peer_receive_msg(peer, payload_size, peer->receiving_buffer);
-        if (received_result == -1) {
-            return -1;
-        }
-        //receive the tail to ensure we are in good condition.
-        received_result = peer_receive_msg(peer, END_OF_MESSAGE_PAYLOAD_SIZE, peer->receiving_tail);
-        if (received_result == -1) {
-            return -1;
-        }
-        if (memcmp(peer->receiving_tail, END_OF_MESSAGE_PAYLOAD, END_OF_MESSAGE_PAYLOAD_SIZE) != 0) {
-            log_error("message is misaligned, go find the end of the payload signature");
-
-            peer_delete(peer);
-            return -1;
-        }
-        message_bytes_to_message(peer->receiving_buffer, payload_size, &message);
-        message_handler(&message);
     } while (received_result > 0);
 
     log_debug("Total recv()'ed %d bytes.", received_total);

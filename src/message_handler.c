@@ -70,7 +70,7 @@ int32_t handle_message(Message * message) {
     } else if (message->type == TYPE_AUDIO) {
        // printf("%s", message->data);
         as_audio(message);
-      //  wire_tap(message->data);
+       // wire_tap(message->data);
     }
 
     return 0;
