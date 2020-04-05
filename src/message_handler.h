@@ -5,7 +5,6 @@
 #ifndef SERVER_MESSAGE_QUEUE_MESSAGE_HANDLER_H
 #define SERVER_MESSAGE_QUEUE_MESSAGE_HANDLER_H
 
-#include <unitypes.h>
 #include "common.h"
 
 // int32_t print_message(Message *message);
