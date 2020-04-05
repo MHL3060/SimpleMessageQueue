@@ -68,8 +68,8 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size,  void * payload
 
         if (received_count < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                log_debug("peer is not ready right now, try again later. %d", received_count);
-                //we need to wait;
+                log_debug("peer is not ready right now, try again.");
+                //we need to wait or the stream will be broken.
                 shouldWait = true;
             } else {
                 perror("recv() from peer error");
@@ -110,14 +110,14 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
             break;
         } else {
             int32_t  payload_size = (int32_t )ntohl(header);
-            log_debug("payload size %u -> %u", header, payload_size);
-            //receive the data payload
+            //receive the data payload + magic number
             received_result = peer_receive_msg(peer, payload_size + END_OF_MESSAGE_PAYLOAD_SIZE, peer->receiving_buffer);
             if (received_result == -1) {
                 return -1;
             }else if (received_result == -2) {
                 break;
             }else {
+                //compare magic number to ensure it is correct.
                 if (memcmp(peer->receiving_buffer + payload_size, END_OF_MESSAGE_PAYLOAD, END_OF_MESSAGE_PAYLOAD_SIZE) != 0) {
                     log_error("message is misaligned, go find the end of the payload signature");
                     peer_delete(peer);
