@@ -80,12 +80,11 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, unsigned char *
             return -1;
         } else if (received_count > 0) {
             if (received_count == 4) {
-                log_info("size = %d", (int)buffer);
-                *payload = buffer;
-            } else {
-                memcpy(payload + received_total, buffer, received_count);
+                log_info("size = %d", (unsigned int)buffer);
 
             }
+                memcpy(payload + received_total, buffer, received_count);
+
             received_total += received_count;
             log_debug("recv() %d bytes", received_count);
         }
@@ -101,7 +100,7 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
     int32_t  received_total = 0;
     Message message;
     int received_result;
-    int header = 0;
+    unsigned int header = 0;
     do {
         memset(&message, 0, sizeof(Message));
         //receive header to determine size
