@@ -81,9 +81,11 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size, unsigned char *
         } else if (received_count > 0) {
             if (received_count == 4) {
                 log_info("size = %d", (int)buffer);
+                *payload = buffer;
+            } else {
+                memcpy(payload + received_total, buffer, received_count);
+                received_total += received_count;
             }
-            memcpy(payload + received_total, buffer, received_count);
-            received_total += received_count;
             log_debug("recv() %d bytes", received_count);
         }
     };

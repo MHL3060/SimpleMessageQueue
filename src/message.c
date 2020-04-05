@@ -97,7 +97,7 @@ int32_t message_to_bytes(Message * message, unsigned char * byteArrayResult, siz
         log_error("error when converting to avro %s",avro_strerror());
         return -1;
     }
-    int64_t size = avro_writer_tell(writer);
+    int32_t size = (int32_t)avro_writer_tell(writer);
 
 
     int32_t networkOrderInt = htonl(size);
