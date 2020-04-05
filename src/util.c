@@ -49,13 +49,13 @@ void init_sockaddr(int port, struct sockaddr_in * sockaddr) {
 
 void initTermios(struct termios * old, struct termios * current)
 {
-    tcgetattr(STDIN_FILENO, &old); /* grab old terminal i/o settings */
+    tcgetattr(STDIN_FILENO, old); /* grab old terminal i/o settings */
     current = old; /* make new settings same as old settings */
-    current->c_lflag &= ~ICANON; /* disable buffered i/o */
+    current->c_lflag &= ~(ICANON); /* disable buffered i/o */
 
     current->c_lflag |= ECHO; /* set echo mode */
 
-    tcsetattr(STDIN_FILENO, TCSANOW, &current); /* use these new terminal i/o settings now */
+    tcsetattr(STDIN_FILENO, TCSANOW, current); /* use these new terminal i/o settings now */
 }
 
 /* Restore old terminal i/o settings */

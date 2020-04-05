@@ -29,7 +29,7 @@
 int listen_sock;
 peer_t connection_list[MAX_CLIENTS];
 char read_buffer[1024]; // buffer for stdin
-struct termios old, current;
+static struct termios old, current;
 pthread_t message_producer;
 
 void shutdown_properly(int code);
