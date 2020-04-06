@@ -80,6 +80,8 @@ void readFile(char * fileName, int dataType,  MessageQueue * queue) {
         memcpy(&message.data, buffer, size);
         message.data_size = size;
         message.type = dataType;
-        message_enqueue(queue, &message);
+        while(message_enqueue(queue, &message) == -1) {
+            usleep(100);
+        }
     }
 }

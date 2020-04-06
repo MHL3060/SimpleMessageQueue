@@ -180,7 +180,7 @@ int server_init(int *returnCode) {
                 high_sock = connection_list[i].socket;
         }
         struct timeval timeval;
-        timeval.tv_sec = 100;
+        timeval.tv_sec = 10000000;
         timeval.tv_usec = 0;
         int activity = select(high_sock + 1, &read_fds, &write_fds, &except_fds, &timeval);
 

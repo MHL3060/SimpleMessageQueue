@@ -41,7 +41,10 @@ char *peer_get_addres_str(peer_t *peer) {
 
 int peer_add_to_send(peer_t *peer, Message *message) {
     if (peer->socket != NO_SOCKET) {
-        return message_enqueue(&peer->send_buffer, message);
+        while(message_enqueue(&peer->send_buffer, message) == -1) {
+            usleep(100);
+        }
+        return 0;
     } else {
         return -1;
     }
