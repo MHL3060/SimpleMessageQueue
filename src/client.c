@@ -212,7 +212,9 @@ int client_init(Arguments * arguments, char *client_name) {
     fd_set except_fds;
 
     log_debug("Waiting for server message or stdin input. Please, type text to send:");
-    readFile(arguments->fileName, arguments->dataType, &server.send_buffer);
+    if (arguments->fileName) {
+        readFile(arguments->fileName, arguments->dataType, &server.send_buffer);
+    }
     // server socket always will be greater then STDIN_FILENO
     int maxfd = server.socket;
   //  pthread_create(&message_producer, NULL, (void *)&init_heart_beat, copied_client_name);
