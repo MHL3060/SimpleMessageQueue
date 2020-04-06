@@ -6,16 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/select.h>
-#include <sys/socket.h>
 #include <signal.h>
-#include <string.h>
-#include <fcntl.h>
-#include <netinet/in.h>
 #include <unistd.h>
-#include <arpa/inet.h>
 #include <stdbool.h>
 #include <termios.h>
-
 #include "common.h"
 #include "log.h"
 #include "peer.h"
@@ -78,7 +72,7 @@ void shutdown_properly(int code) {
         if (connection_list[i].socket != NO_SOCKET)
             close(connection_list[i].socket);
 
-    log_info("Shutdown server properly.\n");
+    log_info("Shutdown server properly.");
     resetTermios(&old);
     exit(code);
 }
@@ -117,7 +111,7 @@ int handle_new_connection() {
 }
 
 void close_client_connection(peer_t *client) {
-    log_info("Close client socket for %s.\n", peer_get_addres_str(client));
+    log_info("Close client socket for %s.", peer_get_addres_str(client));
 
     close(client->socket);
     client->socket = NO_SOCKET;
@@ -141,10 +135,10 @@ int handle_read_from_stdin() {
         for (i = 0; i < MAX_CLIENTS; ++i) {
             if (connection_list[i].socket != NO_SOCKET) {
                 if (peer_add_to_send(&connection_list[i], &new_message) != 0) {
-                    log_info("Send buffer was overflowed, we lost this message!\n");
+                    log_info("Send buffer was overflowed, we lost this message!");
                     continue;
                 }
-                log_info("New message to send was enqueued right now.\n");
+                log_info("New message to send was enqueued right now.");
             }
         }
     }
@@ -160,11 +154,9 @@ int server_init(int *returnCode) {
     if (start_listen_socket(SERVER_LISTEN_PORT, &listen_sock) != 0)
         return EXIT_FAILURE;
 
-    /* Set nonblock for stdin. */
-    int flag = fcntl(STDIN_FILENO, F_GETFL, 0);
-    flag |= O_NONBLOCK;
-    fcntl(STDIN_FILENO, F_SETFL, flag);
-
+    if(set_nonblock(STDIN_FILENO) == -1) {
+        return EXIT_FAILURE;
+    }
     int i;
     for (i = 0; i < MAX_CLIENTS; ++i) {
         connection_list[i].socket = NO_SOCKET;
@@ -177,8 +169,7 @@ int server_init(int *returnCode) {
 
     int high_sock = listen_sock;
 
-    log_info("Waiting for incoming connections.\n");
-    // pthread_create(&message_producer, NULL, (void *)&send_heart_beat_messages, NULL);
+    log_info("Waiting for incoming connections.");
     while (1) {
         build_fd_sets(&read_fds, &write_fds, &except_fds);
 
@@ -199,7 +190,7 @@ int server_init(int *returnCode) {
 
             case 0:
                 // you should never get here
-                log_info("select() returns 0.\n");
+                log_info("select() returns 0.");
                 shutdown_properly(EXIT_FAILURE);
 
             default:
@@ -214,12 +205,12 @@ int server_init(int *returnCode) {
                 }
 
                 if (FD_ISSET(STDIN_FILENO, &except_fds)) {
-                    log_info("except_fds for stdin.\n");
+                    log_info("except_fds for stdin.");
                     shutdown_properly(EXIT_FAILURE);
                 }
 
                 if (FD_ISSET(listen_sock, &except_fds)) {
-                    log_info("Exception listen socket fd.\n");
+                    log_info("Exception listen socket fd.");
                     shutdown_properly(EXIT_FAILURE);
                 }
 
@@ -239,15 +230,13 @@ int server_init(int *returnCode) {
                     }
 
                     if (connection_list[i].socket != NO_SOCKET && FD_ISSET(connection_list[i].socket, &except_fds)) {
-                        log_info("Exception client fd.\n");
+                        log_info("Exception client fd.");
                         close_client_connection(&connection_list[i]);
                         continue;
                     }
                 }
 
         }
-
-       // log_debug("And we are still waiting for clients' or stdin activity. You can type something to send:\n");
     }
 
     return 0;
