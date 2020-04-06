@@ -9,6 +9,7 @@
 int main(int argc, char **argv) {
 
     Arguments arguments;
+    memset(&arguments, 0, sizeof(Arguments));
     parse_args(&arguments, argc, argv);
 
     init_log(arguments.logLevel, "client");

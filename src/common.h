@@ -88,6 +88,7 @@ typedef struct {
     unsigned short port;
     int dataType;
     int logLevel;
+    char * fileName;
 } Arguments;
 
 // header is only for the size of the payload.

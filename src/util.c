@@ -12,7 +12,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <termios.h>
+#include <fcntl.h>
 #include "log.h"
+#include "common.h"
+#include "message_queue.h"
+
 /* Reads from stdin and create new message. This message enqueues to send queueu. */
 int read_from_stdin(char *read_buffer, size_t max_len, size_t * received_size) {
     memset(read_buffer, 0, max_len);
@@ -62,4 +66,20 @@ void initTermios(struct termios * old, struct termios * current)
 void resetTermios(struct termios * old)
 {
     tcsetattr(STDIN_FILENO, TCSANOW, old);
+}
+
+void readFile(char * fileName, int dataType,  MessageQueue * queue) {
+
+    FILE * file = fopen(fileName, "rb");
+    unsigned char buffer[DATA_MAXSIZE];
+    int32_t size;
+    Message message;
+    while ((size = fread(buffer, 1, DATA_MAXSIZE, file)) > 0) {
+
+        memset(&message, 0, sizeof(Message));
+        memcpy(&message.data, buffer, size);
+        message.data_size = size;
+        message.type = dataType;
+        message_enqueue(queue, &message);
+    }
 }

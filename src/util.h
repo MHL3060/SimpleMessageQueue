@@ -12,4 +12,5 @@ int copy_last_elements(unsigned char * array, size_t total_array_size, unsigned 
 
 void initTermios(struct termios * old, struct termios * current);
 void resetTermios(struct termios * old);
+void readFile(char * fileName, int dataType,  MessageQueue * queue);
 #endif //SERVER_CLIENT_UTIL_H

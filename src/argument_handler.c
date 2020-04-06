@@ -16,9 +16,13 @@ int parse_args(Arguments *arguments, int argc, char **argv) {
     arguments->hostName = SERVER_IPV4_ADDR;
     arguments->logLevel = LOG_DEBUG;
 
-    while ((opt = getopt_long(argc, argv, "h:p:l:d:v", NULL , NULL)) != -1) {
+    while ((opt = getopt(argc, argv, "f:h:p:l:d:v:t:")) != -1) {
         switch (opt) {
 
+            case 'f':
+                log_info("%s", optarg);
+                arguments->fileName = strdup(optarg);
+                break;
             case 'h':
                 arguments->hostName = strdup(optarg);
                 break;
@@ -28,6 +32,10 @@ int parse_args(Arguments *arguments, int argc, char **argv) {
             case 'l':
                 arguments->logLevel = atoi(optarg);
                 break;
+            case 't':
+                arguments->dataType = atoi(optarg);
+                break;
+
             default:
                 // help(argv[0]);
                 return 1;
