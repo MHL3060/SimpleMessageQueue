@@ -29,19 +29,21 @@ int message_enqueue(MessageQueue *queue, Message *message) {
     int result = 0;
     pthread_mutex_lock(&queue->lock);
     if ((queue->front == 0 && queue->rear == queue->size -1) || (queue->front == queue->rear + 1)) {
-        return -1;
-    }
-    if (queue->front == -1) {
-        queue->front = 0;
-        queue->rear = 0;
+        result = -1;
     } else {
-        if (queue->rear == queue->size -1) {
+        if (queue->front == -1) {
+            queue->front = 0;
             queue->rear = 0;
-        }else {
-            queue->rear++;
+        } else {
+            if (queue->rear == queue->size -1) {
+                queue->rear = 0;
+            }else {
+                queue->rear++;
+            }
         }
+        memcpy(&queue->data[queue->rear], message, sizeof(Message));
+
     }
-    memcpy(&queue->data[queue->rear], message, sizeof(Message));
     pthread_mutex_unlock(&queue->lock);
     return result;
 }
@@ -71,17 +73,18 @@ int message_dequeue_no_lock(MessageQueue *queue, Message *message) {
     int result = 0;
 
     if (queue->front == -1) {
-        return -1;
-    }
-    memcpy(message, &queue->data[queue->front], sizeof(Message));
-    if (queue->front == queue->rear) {
-        queue->front = -1;
-        queue->rear = -1;
+        result =  -1;
     } else {
-        if (queue->front == queue->size -1) {
-            queue->front = 0;
+        memcpy(message, &queue->data[queue->front], sizeof(Message));
+        if (queue->front == queue->rear) {
+            queue->front = -1;
+            queue->rear = -1;
         } else {
-            queue->front++;
+            if (queue->front == queue->size -1) {
+                queue->front = 0;
+            } else {
+                queue->front++;
+            }
         }
     }
     return 0;
