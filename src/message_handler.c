@@ -48,7 +48,7 @@ void init_audio() {
     if (!audio_initialize) {
         log_info("initialize audio");
 
-        message_create_queue(100, &messageQueue);
+        message_create_queue(2000, &messageQueue);
         ao_initialize();
         audio_device = open_ao_live();
         pthread_create(&audio_thread, NULL, (void *)&play_audio, NULL);
@@ -60,7 +60,10 @@ void as_audio(const Message * message) {
         init_audio();
         audio_initialize = true;
     }
-    message_enqueue(&messageQueue, message);
+    while(message_enqueue(&messageQueue, message) == -1) {
+        log_info("queue is full. wait");
+        usleep(5000);
+    }
 }
 
 
