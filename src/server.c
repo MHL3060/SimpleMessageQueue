@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <termios.h>
+#include <pthread.h>
 #include "common.h"
 #include "log.h"
 #include "peer.h"
@@ -168,7 +169,7 @@ int server_init(int *returnCode) {
     fd_set except_fds;
 
     int high_sock = listen_sock;
-
+    pthread_create(&message_producer, NULL, (void *)&send_heart_beat_messages, SERVER_NAME);
     log_info("Waiting for incoming connections.");
     while (1) {
         build_fd_sets(&read_fds, &write_fds, &except_fds);

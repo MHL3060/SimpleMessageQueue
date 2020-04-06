@@ -17,6 +17,7 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include <netdb.h>
+#include <pthread.h>
 
 #include "common.h"
 #include "log.h"
@@ -217,7 +218,7 @@ int client_init(Arguments * arguments, char *client_name) {
     }
     // server socket always will be greater then STDIN_FILENO
     int maxfd = server.socket;
-  //  pthread_create(&message_producer, NULL, (void *)&init_heart_beat, copied_client_name);
+    pthread_create(&message_producer, NULL, (void *)&init_heart_beat, client_name);
     while (1) {
         // Select() updates fd_set's, so we need to build fd_set's before each select()call.
         build_fd_sets(&server, &read_fds, &write_fds, &except_fds);
