@@ -24,7 +24,7 @@ add_library(common STATIC
         message_queue.c
         peer.c
         message_handler.c
-      #  net_util.c
+        net_util.c
       #  libevent_server.c
 )
 

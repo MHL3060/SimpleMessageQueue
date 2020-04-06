@@ -4,9 +4,7 @@
 
 #include <pthread.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <avro.h>
-#include <sys/queue.h>
 
 #include "common.h"
 #include "message_queue.h"

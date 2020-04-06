@@ -20,6 +20,7 @@
 #include "log.h"
 #include "peer.h"
 #include "util.h"
+#include "net_util.h"
 #include "message_handler.h"
 
 #define MAX_CLIENTS 10
@@ -68,42 +69,6 @@ int setup_signals() {
     return 0;
 }
 
-/* Start listening socket listen_sock. */
-int start_listen_socket(int *listen_sock) {
-    // Obtain a file descriptor for our "listening" socket.
-    *listen_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (*listen_sock < 0) {
-        perror("socket");
-        return -1;
-    }
-
-    int reuse = 1;
-    if (setsockopt(*listen_sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) != 0) {
-        perror("setsockopt");
-        return -1;
-    }
-
-    struct sockaddr_in my_addr;
-    memset(&my_addr, 0, sizeof(my_addr));
-    my_addr.sin_family = AF_INET;
-    my_addr.sin_addr.s_addr = htonl (INADDR_ANY); //inet_addr(INADDR_ANY);
-    my_addr.sin_port = htons(SERVER_LISTEN_PORT);
-
-    if (bind(*listen_sock, (struct sockaddr *) &my_addr, sizeof(struct sockaddr)) != 0) {
-        perror("bind");
-        return -1;
-    }
-
-    // start accept client connections
-    if (listen(*listen_sock, 10) != 0) {
-        perror("listen");
-        return -1;
-    }
-    log_info("Accepting connections on port %d.", (int) SERVER_LISTEN_PORT);
-
-    return 0;
-}
-
 void shutdown_properly(int code) {
     int i;
 
@@ -148,34 +113,7 @@ int build_fd_sets(fd_set *read_fds, fd_set *write_fds, fd_set *except_fds) {
 }
 
 int handle_new_connection() {
-    struct sockaddr_in client_addr;
-    memset(&client_addr, 0, sizeof(client_addr));
-    socklen_t client_len = sizeof(client_addr);
-    int new_client_sock = accept(listen_sock, (struct sockaddr *) &client_addr, &client_len);
-    if (new_client_sock < 0) {
-        perror("accept()");
-        return -1;
-    }
-
-    char client_ipv4_str[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &client_addr.sin_addr, client_ipv4_str, INET_ADDRSTRLEN);
-
-    log_info("Incoming connection from %s:%d.\n", client_ipv4_str, client_addr.sin_port);
-
-    int i;
-    for (i = 0; i < MAX_CLIENTS; ++i) {
-        if (connection_list[i].socket == NO_SOCKET) {
-            connection_list[i].socket = new_client_sock;
-            connection_list[i].addres = client_addr;
-            connection_list[i].current_sending_byte = -1;
-            connection_list[i].current_receiving_byte = 0;
-            return 0;
-        }
-    }
-
-    log_info("There is too much connections. Close new connection %s:%d.\n", client_ipv4_str, client_addr.sin_port);
-    close(new_client_sock);
-    return -1;
+    return handle_new_connections(listen_sock, connection_list, MAX_CLIENTS);
 }
 
 void close_client_connection(peer_t *client) {
@@ -219,7 +157,7 @@ int server_init(int *returnCode) {
     if (setup_signals() != 0)
         return EXIT_FAILURE;
 
-    if (start_listen_socket(&listen_sock) != 0)
+    if (start_listen_socket(SERVER_LISTEN_PORT, &listen_sock) != 0)
         return EXIT_FAILURE;
 
     /* Set nonblock for stdin. */

@@ -41,7 +41,7 @@ int start_listen_socket(int listening_port, int *listen_sock) {
     return 0;
 }
 
-int handle_new_connection(int listen_sock, peer_t * connection_list, int max_client) {
+int handle_new_connections(int listen_sock, peer_t * connection_list, int max_client) {
     struct sockaddr_in client_addr;
     memset(&client_addr, 0, sizeof(client_addr));
     socklen_t client_len = sizeof(client_addr);
