@@ -10,7 +10,7 @@ void init_sockaddr(int port, struct sockaddr_in * sockaddr);
         int is_array_equals(unsigned char * first, unsigned char * second, size_t size);
 int copy_last_elements(unsigned char * array, size_t total_array_size, unsigned char * last_elements);
 
-void initTermios(struct termios * old, struct termios * current);
-void resetTermios(struct termios * old);
-void readFile(char * fileName, int dataType,  MessageQueue * queue);
+void init_termios(struct termios * old, struct termios * current);
+void reset_termios(struct termios * old);
+int read_file(char * fileName, int dataType,  MessageQueue * queue);
 #endif //SERVER_CLIENT_UTIL_H

@@ -74,7 +74,7 @@ void shutdown_properly(int code) {
             close(connection_list[i].socket);
 
     log_info("Shutdown server properly.");
-    resetTermios(&old);
+    reset_termios(&old);
     exit(code);
 }
 
@@ -148,7 +148,7 @@ int handle_read_from_stdin() {
 }
 
 int server_init(int *returnCode) {
-    initTermios(&old, &current);
+    init_termios(&old, &current);
     if (setup_signals() != 0)
         return EXIT_FAILURE;
 

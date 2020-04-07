@@ -18,7 +18,7 @@
 #include <stdbool.h>
 #include <netdb.h>
 #include <pthread.h>
-
+#include <termios.h>
 #include "common.h"
 #include "log.h"
 #include "message_queue.h"
@@ -29,7 +29,7 @@
 
 peer_t server;
 pthread_t message_producer;
-
+static struct termios old, current;
 void shutdown_properly(int code);
 
 void handle_signal_action(int sig_number) {
@@ -185,6 +185,7 @@ static int handle_read_from_stdin(peer_t *server, const char *client_name) {
 void shutdown_properly(int code) {
     peer_delete(&server);
     log_debug("Shutdown client properly.\n");
+    reset_termios(&old);
     exit(code);
 }
 
@@ -193,7 +194,7 @@ void init_heart_beat(char *client_name) {
 }
 
 int client_init(Arguments * arguments, char *client_name) {
-
+    init_termios(&old, &current);
     pthread_create(&message_producer, NULL, (void *)&init_heart_beat, client_name);
     if (setup_signals() != 0)
         exit(EXIT_FAILURE);
@@ -216,7 +217,7 @@ int client_init(Arguments * arguments, char *client_name) {
 
     log_debug("Waiting for server message or stdin input. Please, type text to send:");
     if (arguments->fileName) {
-        readFile(arguments->fileName, arguments->dataType, &server.send_buffer);
+         read_file(arguments->fileName, arguments->dataType, &server.send_buffer);
     }
     // server socket always will be greater then STDIN_FILENO
     int maxfd = server.socket;

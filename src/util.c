@@ -39,7 +39,9 @@ int read_from_stdin(char *read_buffer, size_t max_len, size_t * received_size) {
             }
         }
 
-    log_info("Read from stdin %d bytes. Let's prepare message to send.", read_count);
+    if (read_count > 0) {
+        log_info("Read from stdin %d bytes. Let's prepare message to send.", read_count);
+    }
     * received_size = read_count;
     return read_count;
 }
@@ -51,7 +53,7 @@ void init_sockaddr(int port, struct sockaddr_in * sockaddr) {
     sockaddr->sin_port = htons(port);
 }
 
-void initTermios(struct termios * old, struct termios * current)
+void init_termios(struct termios * old, struct termios * current)
 {
     tcgetattr(STDIN_FILENO, old); /* grab old terminal i/o settings */
     current = old; /* make new settings same as old settings */
@@ -63,12 +65,12 @@ void initTermios(struct termios * old, struct termios * current)
 }
 
 /* Restore old terminal i/o settings */
-void resetTermios(struct termios * old)
+void reset_termios(struct termios * old)
 {
     tcsetattr(STDIN_FILENO, TCSANOW, old);
 }
 
-void readFile(char * fileName, int dataType,  MessageQueue * queue) {
+int read_file(char * fileName, int dataType,  MessageQueue * queue) {
 
     FILE * file = fopen(fileName, "rb");
     unsigned char buffer[DATA_MAXSIZE];
