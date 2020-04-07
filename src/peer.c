@@ -40,12 +40,9 @@ char *peer_get_addres_str(peer_t *peer) {
 }
 
 int peer_add_to_send(peer_t *peer, Message *message) {
+    int retry_times = 60;
     if (peer->socket != NO_SOCKET) {
-        while(message_enqueue(&peer->send_buffer, message) == -1) {
-            log_info("queue is full. wait");
-            usleep(100);
-        }
-        return 0;
+        return message_enqueue_with_retry(&peer->send_buffer, message, retry_times);
     } else {
         return -1;
     }
@@ -103,6 +100,8 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
     Message message;
     int received_result;
     unsigned int header = 0;
+    int result = 0;
+
     do {
         memset(&message, 0, sizeof(Message));
         //receive header to determine size
@@ -117,7 +116,8 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
             //receive the data payload + magic number
             received_result = peer_receive_msg(peer, payload_size + END_OF_MESSAGE_PAYLOAD_SIZE, peer->receiving_buffer);
             if (received_result == -1) {
-                return -1;
+                result = -1;
+                break;
             }else if (received_result == -2) {
                 break;
             }else {
@@ -125,7 +125,8 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
                 if (memcmp(peer->receiving_buffer + payload_size, END_OF_MESSAGE_PAYLOAD, END_OF_MESSAGE_PAYLOAD_SIZE) != 0) {
                     log_error("message is misaligned, go find the end of the payload signature");
                     peer_delete(peer);
-                    return -1;
+                    result = -1;
+                    break;
                 }
             }
             message_bytes_to_message(peer->receiving_buffer, payload_size, &message);
@@ -134,7 +135,7 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
     } while (received_result > 0);
 
     log_debug("Total recv()'ed %d bytes.", received_total);
-    return 0;
+    return result;
 }
 
 int peer_send_to_peer(peer_t *peer) {
@@ -145,6 +146,8 @@ int peer_send_to_peer(peer_t *peer) {
     int32_t  send_total = 0;
     peer->total_sending_buffer_size = 0;
     Message current;
+    int result = 0;
+
     do {
         // If sending message has completely sent and there are messages in queue, why not send them?
         if (peer->current_sending_byte < 0 || peer->current_sending_byte >= peer->total_sending_buffer_size) {
@@ -176,7 +179,8 @@ int peer_send_to_peer(peer_t *peer) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 log_debug("peer is not ready right now, try again later.");
             } else {
-                return -1;
+                result = -1;
+                break;
             }
         } else if (send_count == 0) {
             log_debug("send()'ed 0 bytes. It seems that peer can't accept data right now. Try again later.");
@@ -189,12 +193,14 @@ int peer_send_to_peer(peer_t *peer) {
     } while (send_total < peer->total_sending_buffer_size);
 
     log_debug("Total send()'ed %d bytes.", send_total);
-    return 0;
+    return result;
 }
 
 void peer_enqueue_heart_beat(peer_t * peer, const char * name, bool shouldSend) {
     while(1) {
+        sleep(HEART_BEAT_TIME_IN_SEC);
         if (peer->socket != NO_SOCKET) {
+
             Message message;
             memset(&message, '\0', sizeof(Message));
             char data[DATA_MAXSIZE];
@@ -207,6 +213,5 @@ void peer_enqueue_heart_beat(peer_t * peer, const char * name, bool shouldSend) 
                 peer_send_to_peer(peer);
             }
         }
-        sleep(HEART_BEAT_TIME_IN_SEC);
     }
 }

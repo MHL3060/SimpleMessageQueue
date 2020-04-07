@@ -24,6 +24,22 @@ void delete_message_queue(MessageQueue *queue) {
     free(queue->data);
     queue->data = NULL;
 }
+int message_enqueue_with_retry(MessageQueue *queue, Message *message, int retry_time) {
+    while (message_enqueue(queue, message) == -1 && retry_time > 0) {
+        if (message->type == TYPE_HEART_BEAT) {
+            log_debug("queue is full and will not enqueue the heartbeat message for now");
+            break;
+        }
+        log_debug("spin wait");
+        retry_time--;
+        usleep(1000);
+    }
+    if (retry_time == 0) {
+        return -1;
+    } else {
+        return 0;
+    }
+}
 
 int message_enqueue(MessageQueue *queue, Message *message) {
     int result = 0;

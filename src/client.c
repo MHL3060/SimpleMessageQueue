@@ -194,12 +194,14 @@ void init_heart_beat(char *client_name) {
 
 int client_init(Arguments * arguments, char *client_name) {
 
+    pthread_create(&message_producer, NULL, (void *)&init_heart_beat, client_name);
     if (setup_signals() != 0)
         exit(EXIT_FAILURE);
 
     log_debug("Client '%s' start.\n", client_name);
 
     peer_create(&server);
+    log_info("size of peer_t %d", sizeof(peer_t));
     if (connect_server(arguments, &server) != 0)
         shutdown_properly(EXIT_FAILURE);
 
@@ -218,7 +220,7 @@ int client_init(Arguments * arguments, char *client_name) {
     }
     // server socket always will be greater then STDIN_FILENO
     int maxfd = server.socket;
-    pthread_create(&message_producer, NULL, (void *)&init_heart_beat, client_name);
+
     while (1) {
         // Select() updates fd_set's, so we need to build fd_set's before each select()call.
         build_fd_sets(&server, &read_fds, &write_fds, &except_fds);

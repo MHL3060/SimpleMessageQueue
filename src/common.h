@@ -78,7 +78,6 @@ typedef struct {
     /* The same for the receiving message. */
     unsigned char receiving_buffer[AVRO_PAYLOAD_SIZE]; //same as the message
   //  int32_t receiving_header;
-    unsigned char receiving_tail[7];
     int32_t current_receiving_byte;
     int32_t total_received_buffer_size;
 } peer_t;

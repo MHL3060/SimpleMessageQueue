@@ -60,10 +60,7 @@ void as_audio(const Message * message) {
         init_audio();
         audio_initialize = true;
     }
-    while(message_enqueue(&messageQueue, message) == -1) {
-        log_info("queue is full. wait");
-        usleep(5000);
-    }
+    message_enqueue_with_retry(&messageQueue, message, 500);
 }
 
 

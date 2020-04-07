@@ -25,7 +25,7 @@ int message_peak(MessageQueue * queue, Message *message);
 int message_dequeue_no_lock(MessageQueue *queue, Message *message);
 int message_dequeue(MessageQueue *queue, Message *message);
 int message_dequeue_all(MessageQueue *queue);
-
+int message_enqueue_with_retry(MessageQueue *queue, Message *message, int retry_time);
 
 
 #endif // MESSAGE_QUEUE_H

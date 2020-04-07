@@ -74,14 +74,21 @@ void readFile(char * fileName, int dataType,  MessageQueue * queue) {
     unsigned char buffer[DATA_MAXSIZE];
     int32_t size;
     Message message;
-    while ((size = fread(buffer, 1, DATA_MAXSIZE, file)) > 0) {
+    if (file != NULL) {
+        while ((size = fread(buffer, 1, DATA_MAXSIZE, file)) > 0) {
 
-        memset(&message, 0, sizeof(Message));
-        memcpy(&message.data, buffer, size);
-        message.data_size = size;
-        message.type = dataType;
-        while(message_enqueue(queue, &message) == -1) {
-            usleep(100);
+            memset(&message, 0, sizeof(Message));
+            memcpy(&message.data, buffer, size);
+            message.data_size = size;
+            message.type = dataType;
+            while(message_enqueue(queue, &message) == -1) {
+                usleep(100);
+            }
         }
+        return 0;
+    } else {
+        log_fatal("file '%s' not found. ", fileName);
+        return -1;
     }
+
 }
