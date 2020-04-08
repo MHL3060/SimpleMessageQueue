@@ -8,6 +8,7 @@ include (FindPkgConfig)
 project(server_client C)
 project(server_message_queue C)
 
+find_library(JANSSON jansson)
 find_library (APACHE_AVRO_LIBRARIES avro)
 if (USE_SYSTEM_LIBAO)
     find_library (AO_LIBRARIES ao)
@@ -52,7 +53,7 @@ if (NOT APACHE_AVRO_LIBRARIES)
     add_dependencies(avro avro_external)
 endif ()
 
-find_library(JANSSON jansson)
+
 if (NOT JANSSON)
     set (JANSSON_PREFIX "${CMAKE_BINARY_DIR}/jansson-prefix")
     ExternalProject_Add(
