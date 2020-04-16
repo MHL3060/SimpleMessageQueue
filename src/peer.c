@@ -106,7 +106,7 @@ int peer_receive_from_peer(peer_t *peer, int (*message_handler)(Message *)) {
         memset(&message, 0, sizeof(Message));
         //receive header to determine size
         header = 0;
-        received_result = peer_receive_msg(peer, HEADER_SIZE, (void*) &header);
+        received_result = peer_receive_msg(peer, PRE_AMPLE_SIZE, (void*) &header);
         if (received_result == -1) {
             return -1;
         } else if (received_result == -2) {

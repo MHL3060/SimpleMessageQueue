@@ -65,7 +65,9 @@ void as_audio(const Message * message) {
 
 
 int32_t handle_message(Message * message) {
-    if (message->type == TYPE_DATA) {
+    if (message->type == TYPE_HEART_BEAT) {
+        log_debug("received heart beat");
+    } else if (message->type == TYPE_DATA) {
         wire_tap(message->data);
     } else if (message->type == TYPE_AUDIO) {
        // printf("%s", message->data);

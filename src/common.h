@@ -30,7 +30,7 @@
 /* Size of send queue (messages). */
 #define MAX_MESSAGES_BUFFER_SIZE 1000
 
-#define SENDER_MAXSIZE 128
+#define HEADER_MAXSIZE 128
 #define DATA_MAXSIZE 240000  //this value must less than AVRO_PAYLOAD_SIZE
 #define HEART_BEAT_TIME_IN_SEC 60
 
@@ -48,7 +48,7 @@ typedef struct {
     unsigned char type; //                     1
     unsigned char version; //                  1
     int32_t data_size;     //                  4
-    unsigned char header[SENDER_MAXSIZE]; // 128
+    unsigned char header[HEADER_MAXSIZE]; // 128
     unsigned char data[DATA_MAXSIZE];     //8192
                                         //------
                                         //  8326
@@ -91,7 +91,7 @@ typedef struct {
 } Arguments;
 
 // header is only for the size of the payload.
-static const int HEADER_SIZE = sizeof(int32_t);
+static const int PRE_AMPLE_SIZE = sizeof(int32_t);
 // end of the message magic number. maybe we should change this one to do the crc instead.
 static const unsigned char END_OF_MESSAGE_PAYLOAD[] = { 0xBA, 0xDB, 0xEE, 0xFB, 0xAD, 0xF0, 0x0D};
 

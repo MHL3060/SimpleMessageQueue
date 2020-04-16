@@ -13,7 +13,7 @@
 #include "log.h"
 
 int32_t prepare_message(char *header, char *data, size_t size,  Message *message) {
-    memcpy(message->header, header, HEADER_SIZE);
+    memcpy(message->header, header, PRE_AMPLE_SIZE);
     memcpy(message->data, data, size);
     message->data_size = size;
     return 0;
@@ -32,7 +32,7 @@ int32_t message_convert_message_to_avro_record(Message * message, avro_datum_t *
     avro_datum_t type = avro_int32(message->type);
     avro_datum_t payload = avro_givebytes(message->data, message->data_size, free);
 
-    char * buffer[DATA_MAXSIZE];
+    char buffer[DATA_MAXSIZE];
     int64_t size;
     avro_bytes_get(payload, buffer,  &size);
 
@@ -48,6 +48,7 @@ int32_t message_convert_message_to_avro_record(Message * message, avro_datum_t *
         avro_datum_decref(type);
         avro_datum_decref(payload);
         avro_datum_decref(header);
+        avro_schema_decref(schema);
         return 0;
     }
 }
@@ -101,11 +102,12 @@ int32_t message_to_bytes(Message * message, unsigned char * byteArrayResult, siz
 
 
     int32_t networkOrderInt = htonl(size);
-    memcpy(byteArrayResult, &networkOrderInt, HEADER_SIZE);
-    memcpy(byteArrayResult + HEADER_SIZE, payload_buffer, size);
-    memcpy(byteArrayResult + HEADER_SIZE + size, END_OF_MESSAGE_PAYLOAD, END_OF_MESSAGE_PAYLOAD_SIZE);
+    memcpy(byteArrayResult, &networkOrderInt, PRE_AMPLE_SIZE);
+    memcpy(byteArrayResult + PRE_AMPLE_SIZE, payload_buffer, size);
+    memcpy(byteArrayResult + PRE_AMPLE_SIZE + size, END_OF_MESSAGE_PAYLOAD, END_OF_MESSAGE_PAYLOAD_SIZE);
 
-    * byte_array_size = HEADER_SIZE + size + END_OF_MESSAGE_PAYLOAD_SIZE;
+    * byte_array_size = PRE_AMPLE_SIZE + size + END_OF_MESSAGE_PAYLOAD_SIZE;
+
     avro_schema_decref(schema);
     avro_writer_free(writer);
     return 0;
