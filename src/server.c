@@ -146,7 +146,11 @@ int handle_read_from_stdin() {
 
     return 0;
 }
+int server_handle_message(Message * message) {
 
+
+    handle_message(message);
+}
 int server_init(int *returnCode) {
     init_termios(&old, &current);
     if (setup_signals() != 0)
@@ -217,7 +221,7 @@ int server_init(int *returnCode) {
 
                 for (i = 0; i < MAX_CLIENTS; ++i) {
                     if (connection_list[i].socket != NO_SOCKET && FD_ISSET(connection_list[i].socket, &read_fds)) {
-                        if (peer_receive_from_peer(&connection_list[i], &handle_message) != 0) {
+                        if (peer_receive_from_peer(&connection_list[i], &server_handle_message) != 0) {
                             close_client_connection(&connection_list[i]);
                             continue;
                         }

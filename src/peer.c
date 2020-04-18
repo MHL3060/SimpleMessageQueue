@@ -8,7 +8,6 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <pthread.h>
 #include "common.h"
 #include "log.h"
 #include "message.h"
@@ -49,7 +48,7 @@ int peer_add_to_send(peer_t *peer, Message *message) {
 }
 
 /* Receive message from peer and handle it with message_handler(). */
-int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size,  void * payload) {
+int peer_receive_msg(peer_t *peer, int32_t  expectPayloadSize, void * payload) {
     log_debug("Ready for recv() from %s.", peer_get_addres_str(peer));
 
     int32_t  received_count;
@@ -57,9 +56,9 @@ int peer_receive_msg(peer_t *peer, int32_t  expect_payload_size,  void * payload
     unsigned char buffer[MAX_SEND_SIZE];
     int32_t  len_to_receive;
     bool shouldWait = false;
-    while (shouldWait || received_total < expect_payload_size) {
+    while (shouldWait || received_total < expectPayloadSize) {
         shouldWait = false;
-        len_to_receive = expect_payload_size - received_total;
+        len_to_receive = expectPayloadSize - received_total;
         if (len_to_receive > MAX_SEND_SIZE) {
             len_to_receive = MAX_SEND_SIZE;
         }

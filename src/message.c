@@ -84,7 +84,7 @@ int32_t message_convert_datum_to_message(avro_datum_t *avro_message_record, Mess
     return 0;
 }
 
-int32_t message_to_bytes(Message *message, unsigned char *byteArrayResult, size_t *byte_array_size) {
+int32_t message_to_bytes(Message *message, unsigned char *byteArrayResult, size_t *byteArraySize) {
     avro_schema_t schema;
     validate_schema(&schema);
     avro_datum_t avro_message = avro_record(schema);
@@ -105,7 +105,7 @@ int32_t message_to_bytes(Message *message, unsigned char *byteArrayResult, size_
     memcpy(byteArrayResult + PRE_AMPLE_SIZE, payload_buffer, size);
     memcpy(byteArrayResult + PRE_AMPLE_SIZE + size, END_OF_MESSAGE_PAYLOAD, END_OF_MESSAGE_PAYLOAD_SIZE);
 
-    *byte_array_size = PRE_AMPLE_SIZE + size + END_OF_MESSAGE_PAYLOAD_SIZE;
+    *byteArraySize = PRE_AMPLE_SIZE + size + END_OF_MESSAGE_PAYLOAD_SIZE;
 
     avro_schema_decref(schema);
     avro_writer_free(writer);
